@@ -1,0 +1,22 @@
+*** Settings ***
+Suite Setup     connectTL
+Library         TestLink.py
+Library         OperatingSystem
+
+*** Variables ***
+${project}      NAP Special Delete  # Project name to work
+${api_key}      \  # Personal API access key for testlink user (refer to testlink web > user profile page to get)
+${csv_file_import}  sample_import.csv  # CSV file to upload
+${csv_file_export}  sample_export.csv  # CSV file to export
+
+*** Test Cases ***
+Upload
+  UploadTestCase Csv  ${ts_connTL}  ${csv_file_import}
+
+Export
+  ExportTestCase Csv  ${ts_connTL}  SportsBook - Void Single Bet/PHAIO2/test  /  ${csv_file_export}
+
+*** Keywords ***
+connectTL
+  ${connection}  Connect Test Link  ${api_key}  ${project}
+  Set Suite Variable  ${ts_connTL}  ${connection}
