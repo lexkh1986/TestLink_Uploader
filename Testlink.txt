@@ -11,10 +11,25 @@ ${csv_file_export}  sample_export.csv  # CSV file to export
 
 *** Test Cases ***
 Upload
+  [Documentation]  *Specification:* Insert or update a list of testcases from ${csv_file_import} file to testlink. Followed by testcase path
   UploadTestCase Csv  ${ts_connTL}  ${csv_file_import}
 
 Export
+  [Documentation]  *Specification:* Export a list of testcases to ${csv_file_export} file from testlink. Followed by testlink suild folder path
+  ...
+  ...  i.e. SportsBook - Void Single Bet/PHAIO2/test
   ExportTestCase Csv  ${ts_connTL}  SportsBook - Void Single Bet/PHAIO2/test  /  ${csv_file_export}
+
+Mark_Result
+  [Documentation]  *Specification:* Mark test result to TestLink for a list of testcases followed by sample excel report file. The report file can be downloaded from TestLink > Test Report and Metrics > TestPlan > Test Results Flat
+
+Mark_Result_All
+  [Documentation]  *Specification:* Mark test result to TestLink for all testcases in a testplan provided (with all or a specified build). All test cases will have same test results provided
+  ## Define infos
+  ${plan_name}  Evaluate  '#79999 - Support function Export Excel for Betlist on functions'
+  ${result}  Set Variable  Pass
+  ## Run script
+  MarkResult All  ${ts_connTL}  ${plan_name}  ${result}
 
 *** Keywords ***
 connectTL

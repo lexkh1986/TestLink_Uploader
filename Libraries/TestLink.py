@@ -9,6 +9,7 @@ class TestLink():
     EXECUTIONTYPE = {'MANUAL':1, 'AUTOMATED':2}
     STATE = {'READFORREVIEW':2, 'REWORK':4, 'FINAL':3, 'DRAFT':1}
     BOOLEAN = {'TRUE':1, 'FALSE':0}
+    RESULT = {'PASS':'p', 'FAIL':'f'}
  
     def __init__(self):
         self.SERVER_URL = 'http://testlink.nexcel.vn/lib/api/xmlrpc/v1/xmlrpc.php'
@@ -72,6 +73,15 @@ class TestLink():
         except: pass
         return None
 
+    def _reportTestResult(self, testplan, tc_external_id, tc_status, tc_build=None, tc_note=None, exec_user=None, isOverwrite=False):
+        return self.CONN.reportTCResult(testplanid = testplan,
+                                        testcaseexternalid = self.PROJECT_PREFIX + '-' + str(tc_external_id),
+                                        status = tc_status,
+                                        buildname = tc_build,
+                                        notes = tc_note,
+                                        user = exec_user,
+                                        overwrite = isOverwrite)
+
     def _getTestCase_byID(self, external_id):
         return self.CONN.getTestCase(testcaseexternalid = self.PROJECT_PREFIX + '-' + str(external_id))
 
@@ -80,6 +90,13 @@ class TestLink():
             return self.CONN.getTestCaseIDByName(testcasename = tc_name, testprojectname = self.PROJECT_NAME)
         except:
             return []
+
+    def _getPlan(self, testplanname):
+        return self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
+                                           testplanname = testplanname)
+
+    def _getTCList_byPlan(self, testplanname):
+        return self.CONN.getTestCasesForTestPlan(testplanid = self._getPlan(testplanname)[0]['id'])
 
     def _getTCList_bySuite(self, fullpath, delimeter='/', isDeep=False, isDetails='simple'):
         suiteID = self._getPath(fullpath, delimeter)
@@ -108,6 +125,22 @@ class TestLink():
         print('Connected to TestLink project: %s (server version %s)' % (project_name, iConn.CONN.testLinkVersion()))
 
         return iConn
+
+    @staticmethod
+    def markResult_all(tlConn_, testplan, status, isOverwrite=False):
+        """
+        Mark all test results for a testplan
+        """
+        iPlanID = tlConn_._getPlan(testplan)[0]['id']
+        iTCLists = [(elem[0]['external_id'], elem[0]['tcase_name']) for elem in tlConn_._getTCList_byPlan(testplan).values()]
+        iBuildLists = [(elem['id'], elem['name']) for elem in tlConn_.CONN.getBuildsForTestPlan(iPlanID)]
+        for tb in iBuildLists:
+            for i, tc in enumerate(iTCLists):
+                tlConn_.CONN.reportTCResult(testplanid = iPlanID,
+                                            testcaseexternalid = tlConn_.PROJECT_PREFIX + '-' + str(tc[0]),
+                                            buildid = tb[0],
+                                            status = tlConn_.RESULT.get(status.upper()))
+                print 'Updated test result %s for TestID: %s - %s' % (status, tc[0], tc[1])
 
     @staticmethod
     def exportTestCase_csv(tlConn_, suitepath, suitepath_delimeter, filepath):
