@@ -181,7 +181,7 @@ class TestLink():
                                                  tc_status = tc['status'],
                                                  tc_importance = tc['importance'],
                                                  tc_executiontype = tc['exectype'])
-                print(result['external_id'], tlConn_._getTestCase_byID(result['external_id'])[0]['name'])
+                print 'Imported new: %s - %s' % (result['external_id'], tlConn_._getTestCase_byID(result['external_id'])[0]['name'])
             else:
                 result = tlConn_._updateTestCase(external_id = tc['id'],
                                                  tc_name = tc['testcase_name'],
@@ -191,7 +191,4 @@ class TestLink():
                                                  tc_importance = tc['importance'],
                                                  tc_executiontype = tc['exectype'],
                                                  tc_version = tc['version'])
-
-tl = TestLink.connectTestLink('e0c8ddc5cbfb54db815a85b4bab5cf31','NAP-Report')
-TestLink.exportTestCase_csv(tl, 'Main/House winloss by Products[Apply New VirtualRate]', '/', 'D:/testB.csv')
-#newTC = uploadTestCase_csv(tl, 'D:/testA.csv')
+                print 'Updated: %s' % tc['id']

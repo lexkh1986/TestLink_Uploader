@@ -1,6 +1,6 @@
 *** Settings ***
 Suite Setup     connectTL
-Library         TestLink.py
+Library         Libraries/TestLink.py
 Library         OperatingSystem
 
 *** Variables ***
