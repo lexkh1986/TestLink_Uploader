@@ -1,19 +1,13 @@
 import_flag,id,testcase_name, fullpath, author, summary,status,importance,exectype,execduration,version
-TRUE,,Verify checkpoint A,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"<p>Verify checkpoint A</p>
-<ul>	
-<li>Step1: Do something</li>
-<li>Step2: Do something</li>
-</ul>
-<p><strong>Expected result</strong>: Expected something</p>",Final,High,Manual,,
-TRUE,,Verify checkpoint B,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"<p>Verify checkpoint B</p>
-<ul>	
-<li>Step1: Do something</li>
-<li>Step2: Do something</li>
-</ul>
-<p><strong>Expected result</strong>: Expected something</p>",Draft,Medium,Automated,,
-FALSE,,Verify checkpoint C,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"<p>Verify checkpoint B</p>
-<ul>	
-<li>Step1: Do something</li>
-<li>Step2: Do something</li>
-</ul>
-<p><strong>Expected result</strong>: Expected something</p>",Draft,Low,Automated,,
+TRUE,4404,Verify checkpoint A,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"Verify checkpoint A
+Step: Do something
+Checkpoint: Check something
+Verify point: Expected something",Final,High,Manual,,
+TRUE,4405,Verify checkpoint B,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"Verify checkpoint B
+Step: Do something
+Checkpoint: Check something
+Verify point: Expected something",Draft,Medium,Automated,,
+FALSE,,Verify checkpoint C,SportsBook - Void Single Bet/PHAIO2/test,lex.khuat,"Verify checkpoint C
+Step: Do something
+Checkpoint: Check something
+Verify point: Expected something",Draft,Low,Automated,,

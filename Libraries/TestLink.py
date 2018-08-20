@@ -171,6 +171,17 @@ class TestLink():
             dict_writer.writerows(iResult)
 
     @staticmethod
+    def _parse_summary(string):
+        val = string.split('''\n''')
+        for i, v in enumerate(val):
+            val[i] = '%s<br/>' % v
+            val[i] = val[i].replace('Step:','<strong>&emsp;Step:</strong>')
+            val[i] = val[i].replace('Checkpoint:','<strong>&emsp;Checkpoint:</strong>')
+            val[i] = val[i].replace('Verify point:','<strong>&emsp;Verify point:</strong>')
+        completedStr = ''.join(val)
+        return completedStr
+
+    @staticmethod
     def uploadTestCase_csv(tlConn_, filepath):
         """
         Upload test cases to TestLink from a csv file\n
@@ -204,6 +215,7 @@ class TestLink():
         
         # Upload row by row
         for tc in iData:
+            tc['summary'] = tlConn_._parse_summary(tc['summary'])
             if not bool(tlConn_.BOOLEAN.get(tc['import_flag'].upper())):
                 continue
             if tc['id'] in ('', None):
@@ -224,4 +236,4 @@ class TestLink():
                                                  tc_importance = tc['importance'],
                                                  tc_executiontype = tc['exectype'],
                                                  tc_version = tc['version'])
-                print 'Updated: %s' % tc['id']
+                print 'Updated: %s - %s' % (tc['id'], tc['testcase_name'])
