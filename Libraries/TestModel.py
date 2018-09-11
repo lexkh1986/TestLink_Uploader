@@ -1,8 +1,8 @@
 class Test(object):
-    def __init__(self):
-        self.PROJECT_NAME = None
-        self.TESTPLAN_NAME = None
-        self.TESTBUILD_NAME = None
+    def __init__(self, project, testplan, testbuild):
+        self.PROJECT_NAME = project
+        self.TESTPLAN_NAME = testplan
+        self.TESTBUILD_NAME = testbuild
         self.TESTS = {}
 
     def append_Test(self, TestCase):
@@ -10,15 +10,6 @@ class Test(object):
 
     def get_Test(self, index):
         return self.TESTS.get(index).toDict()
-
-    def set_Project(self, name):
-        self.PROJECT_NAME = name
-
-    def set_TestPlan(self, name):
-        self.TESTPLAN_NAME = name
-
-    def set_TestBuild(self, name):
-        self.TESTBUILD_NAME = name
 
 class TestCase(object):
     def __init__(self, id, name, address, priority, exectype):
