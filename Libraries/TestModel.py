@@ -3,10 +3,13 @@ class Test(object):
         self.PROJECT_NAME = project
         self.TESTPLAN_NAME = testplan
         self.TESTBUILD_NAME = testbuild
-        self.TESTS = {}
+        self.TESTS = []
 
     def append_Test(self, TestCase):
-        self.TESTS.update({TestCase.ID:TestCase})
+        self.TESTS.append(TestCase)
+
+    def toDict(self):
+        return [iTC.toDict() for iTC in self.TESTS]
 
 class TestCase(object):
     def __init__(self):
@@ -20,6 +23,7 @@ class TestCase(object):
         self.Priority = None
         self.Exectype = None
         self.Sync = False
+        self.WbIndex = None
 
         self.Result = None
         self.TestedBy = None

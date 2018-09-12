@@ -13,14 +13,14 @@ def parse_summary(string, isReversed=False):
     if not isReversed:
         val = string.split('''\n''')
         for i, v in enumerate(val):
-            val[i] = val[i].replace('\n', '<br/>')
+            val[i] = '%s<br/>' % v
             val[i] = val[i].replace('Step:','<strong>&emsp;Step:</strong>')
             val[i] = val[i].replace('Checkpoint:','<strong>&emsp;Checkpoint:</strong>')
             val[i] = val[i].replace('Verify point:','<strong>&emsp;Verify point:</strong>')
         return ''.join(val)
     else:
         val = string.split('<br/>')
-        val.remove('\n')
+        if '\n' in val: val.remove('\n')
         for i, v in enumerate(val):
             val[i] = val[i].strip(' \t\r')
             val[i] = val[i].replace('<strong>&emsp;Step:</strong>', 'Step:')
