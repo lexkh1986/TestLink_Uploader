@@ -19,8 +19,9 @@ class Workbook(object):
             iConfig = getVarFromFile(self.CONFIG_PATH)
             self.USER = iConfig.USERNAME
             self.DEVKEY = iConfig.DEVKEY
-            self.FILEPATH = iConfig.EXCEL_PATH 
-            self.SHEETNAME = iConfig.SHEET_NAME 
+            self.FILEPATH = iConfig.EXCEL_PATH
+            self.SHEETNAME = iConfig.SHEET_NAME
+            self.ISSTEPS = iConfig.SUMMARY_AS_STEP
 
     def _loadSheet(self):
         if os.path.isfile(self.FILEPATH):
@@ -34,11 +35,33 @@ class Workbook(object):
         if not self.isLoaded:
             raise Exception('Workbook content is empty. Please make sure excel file is accessible')
         iTemplate = Template()
-        self.INFO = Test(self.SHEET.cell_value(iTemplate.LOC_PROJECT_VAL.get('r'), iTemplate.LOC_PROJECT_VAL.get('c')),
-                         self.SHEET.cell_value(iTemplate.LOC_PLAN_VAL.get('r'), iTemplate.LOC_PLAN_VAL.get('c')),
-                         self.SHEET.cell_value(iTemplate.LOC_BUILD_VAL.get('r'), iTemplate.LOC_BUILD_VAL.get('c')))
+        self.INFO = Connection(self.DEVKEY,
+                               self.SHEET.cell_value(iTemplate.LOC_PROJECT_VAL.get('r'), iTemplate.LOC_PROJECT_VAL.get('c')),
+                               self.SHEET.cell_value(iTemplate.LOC_PLAN_VAL.get('r'), iTemplate.LOC_PLAN_VAL.get('c')),
+                               self.SHEET.cell_value(iTemplate.LOC_BUILD_VAL.get('r'), iTemplate.LOC_BUILD_VAL.get('c')))
 
-    def _saveDetails(self):
+    def _pullTestCases(self):
+        wb = copy(self.WORKBOOK)
+        ws = wb.get_sheet(0)
+        ws.show_grid = False
+
+        iTemplate = Template()
+        self.INFO.pullTestCases()
+        iRow = iTemplate.LOC_DETAILS.get('r')
+        iHeader = self.SHEET.row_values(iRow)
+        
+        for id, iTC in self.INFO.TESTS.items():
+            iRow = iRow + 1
+            for i, val in enumerate(iHeader):
+                iStyle = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin;')
+                if self.ISSTEPS and val == 'Steps':
+                    ws.write(iRow, i, parse_summary('%s\n%s' % (iTC.toDict().get('Summary'), iTC.toDict().get('Steps')), True), iStyle)
+                else:
+                    ws.write(iRow, i, iTC.toDict().get(val), iStyle)
+                    
+        wb.save(self.FILEPATH)
+
+    def _syncDetails(self):
         try:
             wb = copy(self.WORKBOOK)
             ws = wb.get_sheet(0)
@@ -56,7 +79,11 @@ if __name__ == "__main__":
    print 'Test Project: %s' % wb.INFO.PROJECT_NAME
    print 'Test Plan: %s' % wb.INFO.TESTPLAN_NAME
    print 'Test Build: %s' % wb.INFO.TESTBUILD_NAME
-   
+
+   if '-p' in sys.argv:
+       wb._pullTestCases()
+       print 'Data pulled from TestLink.... Done!'
+
    if '-s' in sys.argv:
-       wb._saveDetails()
+       wb._syncDetails()
        print 'Data sync to TestLink.... Done!'

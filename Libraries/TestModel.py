@@ -6,19 +6,19 @@ class Test(object):
         self.TESTS = {}
 
     def append_Test(self, TestCase):
-        self.TESTS.update({len(self.TESTS.keys())+1:TestCase})
-
-    def get_Test(self, index):
-        return self.TESTS.get(index).toDict()
+        self.TESTS.update({TestCase.ID:TestCase})
 
 class TestCase(object):
-    def __init__(self, id, name, address, priority, exectype):
-        self.ID = id
-        self.Name = name
-        self.Address = address
+    def __init__(self):
+        self.ID = None
+        self.FullID = None
+        self.Name = None
+        self.Author = None
+        self.Address = None
+        self.Summary = None
         self.Steps = None
-        self.Priority = priority
-        self.Exectype = exectype
+        self.Priority = None
+        self.Exectype = None
         self.Sync = False
 
         self.Result = None
@@ -34,5 +34,3 @@ class TestCase(object):
 ##testcase2 = TestCase('Test2', 'Name2', 'Summary2', 'High', 'Automated')
 ##test.append_Test(testcase1)
 ##test.append_Test(testcase2)
-##print test.get_Test(1)
-##print test.get_Test(2)
