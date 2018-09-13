@@ -10,6 +10,8 @@ def getVarFromFile(filename):
     return data
 
 def parse_summary(string, isReversed=False):
+    if string is None: string = ''
+    if type(string) == list: string = str(string)
     if not isReversed:
         val = string.split('''\n''')
         for i, v in enumerate(val):
@@ -19,7 +21,7 @@ def parse_summary(string, isReversed=False):
             val[i] = val[i].replace('Verify point:','<strong>&emsp;Verify point:</strong>')
         return ''.join(val)
     else:
-        val = string.split('<br/>')
+        val = string.encode('ascii',errors='ignore').split('<br/>')
         if '\n' in val: val.remove('\n')
         for i, v in enumerate(val):
             val[i] = val[i].strip(' \t\r')

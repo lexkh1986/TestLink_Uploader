@@ -22,7 +22,9 @@ class TestCase(object):
         self.Steps = None
         self.Priority = None
         self.Exectype = None
+        self.Version = 1
         self.Sync = False
+        self.SyncStatus = 0 #1:PULLED, 2:MODIFIED, 3:CREATED, 4:DUPLICATED
         self.WbIndex = None
 
         self.Result = None

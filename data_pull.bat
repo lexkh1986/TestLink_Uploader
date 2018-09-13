@@ -1,3 +1,3 @@
 @echo OFF
-python "./Libraries/Workbook.py" -p
+python "__init__.py" -p
 pause

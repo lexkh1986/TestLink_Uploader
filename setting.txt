@@ -1,6 +1,6 @@
 USERNAME = 'lex.khuat'
 DEVKEY = 'c6a9f5dff1bfff1bad8655a7d4d4b4bb'
-EXCEL_PATH = '../Working.xls'
+EXCEL_PATH = 'Working.xls'
 SHEET_NAME = 'Worksheet'
 
-SUMMARY_AS_STEP = True
+TESTCASE_PATH_DELIMETER = '>'

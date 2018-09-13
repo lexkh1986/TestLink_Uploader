@@ -4,10 +4,11 @@ from testlink import *
 from Misc import *
 
 class Connection(Test):
-    STATUS = {'p':'PASS', 'f':'FAIL', 'n':'NOT RUN', 'b':'BLOCK'}
-    STATE = {2:'READFORREVIEW', 4:'REWORK', 3:'FINAL', 1:'DRAFT'}
-    IMPORTANCE = {3:'HIGH', 2:'MEDIUM', 1:'LOW'}
-    EXECUTIONTYPE = {1:'MANUAL', 2:'AUTOMATED'}
+    SYNC = {'':False, 'X':True, 'x':True}
+    STATUS = {'p':'Pass', 'f':'Fail', 'n':'Not run', 'b':'Block'}
+    STATE = {2:'Ready', 4:'Rework', 3:'Final', 1:'Draft'}
+    IMPORTANCE = {3:'High', 2:'Medium', 1:'Low'}
+    EXECUTIONTYPE = {1:'Manual', 2:'Automated'}
 
     def __init__(self, devkey, project, plan, build):
         super(Connection, self).__init__(project, plan, build)
@@ -64,29 +65,33 @@ class Connection(Test):
                     isFound = True
         return tmpRefID
 
-    def pushTestCases(self):
-        for iTC in self.TESTS:
-            if iTC.Sync:
-                if iTC.FullID in ('', None):
-                    rs = self.CONN.createTestCase(testcasename = iTC.Name,
-                                                  testprojectid = self.PROJECT_ID,
-                                                  testsuiteid = self._getPath(iTC.Address),
-                                                  authorlogin = iTC.Author,
-                                                  summary = parse_summary(iTC.Summary),
-                                                  steps = parse_summary(iTC.Steps),
-                                                  importance = dict_getkey(self.IMPORTANCE, iTC.Priority),
-                                                  executiontype = dict_getkey(self.EXECUTIONTYPE, iTC.Exectype))
-                    iTC.FullID = '%s-%s' % (self.PROJECT_PREFIX, rs[0]['additionalInfo']['external_id'])
-                else:
-                    try:
-                        self.CONN.updateTestCase(testcaseexternalid = iTC.FullID,
-                                                 testcasename = iTC.Name,
-                                                 user = iTC.Author,
-                                                 summary = parse_summary(iTC.Summary),
-                                                 steps = parse_summary(iTC.Steps),
-                                                 importance = dict_getkey(self.IMPORTANCE, iTC.Priority),
-                                                 executiontype = dict_getkey(self.EXECUTIONTYPE, iTC.Exectype))
-                    except: pass
+    def pushTestCase(self, iTC_):
+        if iTC_.FullID in ('', None):
+            try:
+                rs = self.CONN.createTestCase(testcasename = iTC_.Name,
+                                              testprojectid = self.PROJECT_ID,
+                                              testsuiteid = self._getPath(iTC_.Address, self.DELIMETER),
+                                              authorlogin = iTC_.Author,
+                                              summary = parse_summary(iTC_.Summary),
+                                              steps = parse_summary(iTC_.Steps),
+                                              importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
+                                              executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
+                iTC_.ID = rs[0]['additionalInfo']['external_id']
+                if iTC_.ID is not None:
+                    iTC_.FullID = '%s-%s' % (self.PROJECT_PREFIX, iTC_.ID)
+                    iTC_.SyncStatus = 3
+            except Exception, err: print 'Failed to create TestCase: %s\n%s' % (iTC_.Name, err)
+        else:
+            try:
+                self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
+                                         testcasename = iTC_.Name,
+                                         user = iTC_.Author,
+                                         summary = parse_summary(iTC_.Summary),
+                                         steps = parse_summary(iTC_.Steps),
+                                         importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
+                                         executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
+                iTC_.SyncStatus = 4
+            except Exception, err: print 'Failed to modifiy TestCase: %s\n%s' % (iTC_.Name, err)
 
     def pullTestCases(self):
         iTemplate = Template()
@@ -96,18 +101,24 @@ class Connection(Test):
         iFullID = [iTC.FullID for iTC in self.TESTS]
         iTC_List = self.CONN.getTestCasesForTestPlan(testplanid = self.TESTPLAN_ID,
                                                      buildid = self.TESTBUILD_ID,
-                                                     details = 'simple').values()
+                                                     details = 'simple')
+        if not iTC_List:
+            return False
 
+        iTC_List = iTC_List.values()
         for iTC in iTC_List:
             if iTC[0]['full_external_id'] in iFullID: continue
             iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
             newTC = TestCase()
+            newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
+            newTC.SyncStatus = 1
             newTC.ID = iTC[0]['external_id']
             newTC.FullID = iTC[0]['full_external_id']
             newTC.Name = iTC_Details[0]['name']
             newTC.Summary = iTC_Details[0]['summary']
             newTC.Steps = iTC_Details[0]['steps']
-            newTC.Author = iTC_Details[0]['author_login']
+            newTC.Author = iTC_Details[0]['author_login'].lower()
+            newTC.Version = int(iTC_Details[0]['version'])
             newTC.Priority = self.IMPORTANCE.get(int(iTC_Details[0]['importance']))
             newTC.Exectype = self.EXECUTIONTYPE.get(int(iTC_Details[0]['execution_type']))
             if iTC[0]['exec_status'] != 'n':
@@ -116,3 +127,4 @@ class Connection(Test):
             iTakenLoc = iOpenLoc.pop(0)
             newTC.WbIndex = iTakenLoc
             self.append_Test(newTC)
+        return True
