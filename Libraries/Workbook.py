@@ -92,6 +92,8 @@ class Workbook(object):
                         print 'Successfully created TestCase: %s - %s' % (iTC.FullID, iTC.Name)
                     elif iTC.SyncStatus == 2:
                         print 'Successfully modified TestCase: %s - %s' % (iTC.FullID, iTC.Name)
+                    elif iTC.SyncStatus == 4:
+                        print 'Duplicate name found, please use another one: %s - %s' % (iTC.FullID, iTC.Name)
 
             wb.save(self.FILEPATH)
         except IOError, err: raise Exception('Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH)

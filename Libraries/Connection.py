@@ -42,6 +42,11 @@ class Connection(Test):
     def _getTestCase_byID(self, full_external_id):
         return self.CONN.getTestCase(testcaseexternalid = full_external_id)
 
+    def _getTestCase_byName(self, name):
+        try: return self.CONN.getTestCaseIDByName(testcasename = name,
+                                                  testprojectname = self.PROJECT_NAME)
+        except: return []
+
     def _getPath(self, full_path, delimeter='/'):
         tmpPath = full_path.split(delimeter)
         tmpRefID, tmpRefName = None, None
@@ -66,6 +71,12 @@ class Connection(Test):
         return tmpRefID
 
     def pushTestCase(self, iTC_):
+        #Check if already exists before 
+        if self._getTestCase_byName(iTC_.Name):
+            iTC_.SyncStatus = 4
+            return
+
+        #Create if new, modify if found external ID
         if iTC_.FullID in ('', None):
             try:
                 rs = self.CONN.createTestCase(testcasename = iTC_.Name,
