@@ -1,3 +1,8 @@
+import re
+from HTMLParser import HTMLParser
+
+TAG_RE = re.compile(r'<[^>]+>')
+
 def dict_getkey(dict_, value):
     return next((key for key, val in dict_.items() if val == value), None)
 
@@ -21,11 +26,17 @@ def parse_summary(string, isReversed=False):
             val[i] = val[i].replace('Verify point:','<strong>&emsp;Verify point:</strong>')
         return ''.join(val)
     else:
+        ps = HTMLParser()
         val = string.encode('ascii',errors='ignore').split('<br/>')
         if '\n' in val: val.remove('\n')
         for i, v in enumerate(val):
-            val[i] = val[i].strip(' \t\r')
+            val[i] = re.sub(r'\n\t', '', val[i])
+            val[i] = remove_tags(val[i])
+            val[i] = ps.unescape(val[i])
             val[i] = val[i].replace('<strong>&emsp;Step:</strong>', 'Step:')
             val[i] = val[i].replace('<strong>&emsp;Checkpoint:</strong>', 'Checkpoint:')
             val[i] = val[i].replace('<strong>&emsp;Verify point:</strong>', 'Verify point:')
         return '\n'.join(val)
+
+def remove_tags(text):
+    return TAG_RE.sub('', text)

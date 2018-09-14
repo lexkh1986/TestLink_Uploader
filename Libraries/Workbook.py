@@ -86,7 +86,7 @@ class Workbook(object):
                 if iTC.FullID in pulledList:
                     for i, val in enumerate(self.HEADER):
                         ws.write(iTC.WbIndex, i, parse_summary(iTC.toDict().get(val), True), iStyle)
-                    print 'Pulled TestCase: %s - %s' % (iTC.FullID, iTC.Name)
+                    print 'Pulled TestCase: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
             try:
                 wb.save(self.FILEPATH)
             except IOError, err:
