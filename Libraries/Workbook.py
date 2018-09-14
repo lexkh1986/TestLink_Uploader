@@ -13,7 +13,7 @@ class Workbook(object):
     def __init__(self):
         self.isLoaded = False
 
-    def _loadWorkbook(self):
+    def loadWorkbook(self):
         iTemplate = Template()
         if os.path.isfile(self.CONFIG_PATH):
             iConfig = getVarFromFile(self.CONFIG_PATH)
@@ -30,46 +30,60 @@ class Workbook(object):
                                        self.SHEET.cell_value(iTemplate.LOC_PLAN_VAL.get('r'), iTemplate.LOC_PLAN_VAL.get('c')),
                                        self.SHEET.cell_value(iTemplate.LOC_BUILD_VAL.get('r'), iTemplate.LOC_BUILD_VAL.get('c')))
                 self.INFO.DELIMETER = iConfig.TESTCASE_PATH_DELIMETER
+                self.INFO.AUTO_ADD_TESTPLAN = iConfig.AUTO_ADD_TESTPLAN
+                self.INFO.USE_DEFAULT_RESULT = iConfig.USE_DEFAULT_RESULT
+                self.INFO.DEFAULT_RESULT = iConfig.DEFAULT_RESULT_IN_BATCH
                 print 'Workbook loaded (%s)\nSheet: %s\n' % (self.FILEPATH, iConfig.SHEET_NAME)
                 return
             raise Exception('Could not locate excel workbook by path: %s' % self.FILEPATH)
         raise Exception('Could not locate settings: %s' % self.CONFIG_PATH)
 
-    def _loadTestCases(self):
+    def loadTestCases(self, useSyncFlag=True):
         if not self.isLoaded:
             raise Exception('Workbook content is empty. Please make sure excel file is accessible')
         iTemplate = Template()
         iRow = iTemplate.LOC_DETAILS.get('r')
 
         for ir, row in enumerate(self.SHEET.get_rows()):
-            iSyncFlag = self.SHEET.cell_value(ir, self.HEADER.index('Sync'))
-            if ir <= iRow or not self.INFO.SYNC.get(iSyncFlag.upper(), False): continue
-            newTC = TestCase()
-            newTC.Sync = iSyncFlag
-            newTC.WbIndex = ir
-            newTC.FullID = self.SHEET.cell_value(ir, self.HEADER.index('FullID'))
-            newTC.Name = self.SHEET.cell_value(ir, self.HEADER.index('Name'))
-            newTC.Summary = self.SHEET.cell_value(ir, self.HEADER.index('Summary'))
-            newTC.Address = self.SHEET.cell_value(ir, self.HEADER.index('Address'))
-            newTC.Steps = self.SHEET.cell_value(ir, self.HEADER.index('Steps'))
-            newTC.Author = self.SHEET.cell_value(ir, self.HEADER.index('Author')).lower()
-            newTC.Priority = self.SHEET.cell_value(ir, self.HEADER.index('Priority')).title()
-            newTC.Exectype = self.SHEET.cell_value(ir, self.HEADER.index('Exectype')).title()
-            self.INFO.append_Test(newTC)
+            if ir > iRow:
+                if False not in list(set([self.SHEET.cell_type(ir, i) in (xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_BLANK)\
+                                          for i, cell in enumerate(row)])): continue
+                iSyncFlag = self.SHEET.cell_value(ir, self.HEADER.index('Sync'))
+                if useSyncFlag:
+                    if not self.INFO.SYNC.get(iSyncFlag.upper(), False): continue
+                newTC = TestCase()
+                newTC.Sync = iSyncFlag
+                newTC.WbIndex = ir
+                newTC.FullID = self.SHEET.cell_value(ir, self.HEADER.index('FullID'))
+                newTC.Name = self.SHEET.cell_value(ir, self.HEADER.index('Name'))
+                newTC.Summary = self.SHEET.cell_value(ir, self.HEADER.index('Summary'))
+                newTC.Address = self.SHEET.cell_value(ir, self.HEADER.index('Address'))
+                newTC.Steps = self.SHEET.cell_value(ir, self.HEADER.index('Steps'))
+                newTC.Author = self.SHEET.cell_value(ir, self.HEADER.index('Author')).lower()
+                newTC.Owner = self.SHEET.cell_value(ir, self.HEADER.index('Owner'))
+                newTC.Priority = self.SHEET.cell_value(ir, self.HEADER.index('Priority')).title()
+                newTC.Exectype = self.SHEET.cell_value(ir, self.HEADER.index('Exectype')).title()
 
-    def _pullTestCases(self):
-        isFound = self.INFO.pullTestCases()
-        if isFound:
+                newTC.Result = self.SHEET.cell_value(ir, self.HEADER.index('Result'))
+                newTC.Duration = self.SHEET.cell_value(ir, self.HEADER.index('Duration'))
+                newTC.Note = self.SHEET.cell_value(ir, self.HEADER.index('Note'))
+
+                newTC.ID = newTC.FullID[len(self.INFO.PROJECT_PREFIX)+1-len(newTC.FullID):]
+                self.INFO.append_Test(newTC)
+
+    def pullTestCases(self):
+        pulledList = self.INFO.pullTestCases()
+        if pulledList:
             wb = copy(self.WORKBOOK)
             ws = wb.get_sheet(0)
             ws.show_grid = False
             iStyle = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin;')
             
             for iTC in self.INFO.TESTS:
-                if iTC.SyncStatus != 1: continue
-                for i, val in enumerate(self.HEADER):
-                    ws.write(iTC.WbIndex, i, parse_summary(iTC.toDict().get(val), True), iStyle)
-                print 'Pulled TestCase: %s - %s' % (iTC.FullID, iTC.Name)
+                if iTC.FullID in pulledList:
+                    for i, val in enumerate(self.HEADER):
+                        ws.write(iTC.WbIndex, i, parse_summary(iTC.toDict().get(val), True), iStyle)
+                    print 'Pulled TestCase: %s - %s' % (iTC.FullID, iTC.Name)
             try:
                 wb.save(self.FILEPATH)
             except IOError, err:
@@ -77,7 +91,7 @@ class Workbook(object):
         else:
             print 'Testplan details pulled without any TestCases from TestLink'
 
-    def _pushTestCases(self):
+    def pushTestCases(self):
         try:
             wb = copy(self.WORKBOOK)
             ws = wb.get_sheet(0)
@@ -86,14 +100,17 @@ class Workbook(object):
             iStyle = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin;')
             for iTC in self.INFO.TESTS:
                 if self.INFO.SYNC.get(iTC.Sync, False):
-                    self.INFO.pushTestCase(iTC)
-                    if iTC.SyncStatus == 3:
+                    if self.INFO.pushTestCase(iTC) == 1:
                         ws.write(iTC.WbIndex, self.HEADER.index('FullID'), iTC.FullID, iStyle)
-                        print 'Successfully created TestCase: %s - %s' % (iTC.FullID, iTC.Name)
-                    elif iTC.SyncStatus == 2:
-                        print 'Successfully modified TestCase: %s - %s' % (iTC.FullID, iTC.Name)
-                    elif iTC.SyncStatus == 4:
-                        print 'Duplicate name found, please use another one: %s - %s' % (iTC.FullID, iTC.Name)
 
             wb.save(self.FILEPATH)
         except IOError, err: raise Exception('Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH)
+
+    def pushResults(self):
+        for iTC in self.INFO.TESTS:
+            if iTC.FullID not in ('', None):
+                rs = self.INFO.pushResult(iTC)
+                if rs[0]['status']:
+                    print 'Succeeded upload result: %s %s' % (iTC.FullID, iTC.Result)
+                else:
+                    print 'Execution result: %s %s - %s' % (iTC.FullID, iTC.Result, rs[0]['message'])

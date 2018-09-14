@@ -47,6 +47,30 @@ class Connection(Test):
                                                   testprojectname = self.PROJECT_NAME)
         except: return []
 
+    def _addTestCase_toTestPlan(self, iTC_):
+        self.CONN.addTestCaseToTestPlan(testprojectid = self.PROJECT_ID,
+                                        testplanid = self.TESTPLAN_ID,
+                                        testcaseexternalid = iTC_.FullID,
+                                        version = iTC_.Version,
+                                        overwrite = True)
+
+    def _addTestCase_toTestBuild(self, iTC_):
+        self.CONN.assignTestCaseExecutionTask(user = iTC_.Owner,
+                                              testplanid = self.TESTPLAN_ID,
+                                              buildid = self.TESTBUILD_ID,
+                                              testcaseexternalid = iTC_.FullID)
+
+    def _removeTestCase_fromTestBuild(self, iTC_):
+        self.CONN.unassignTestCaseExecutionTask(action = 'unassignAll',
+                                                testplanid = self.TESTPLAN_ID,
+                                                buildid = self.TESTBUILD_ID,
+                                                testcaseexternalid = iTC_.FullID)
+
+    def _getTestCase_Owner(self, iTC_):
+        return self.CONN.getTestCaseAssignedTester(testplanid = self.TESTPLAN_ID,
+                                                   buildid = self.TESTBUILD_ID,
+                                                   testcaseexternalid = iTC_.FullID)
+
     def _getPath(self, full_path, delimeter='/'):
         tmpPath = full_path.split(delimeter)
         tmpRefID, tmpRefName = None, None
@@ -70,13 +94,39 @@ class Connection(Test):
                     isFound = True
         return tmpRefID
 
-    def pushTestCase(self, iTC_):
-        #Check if already exists before 
-        if self._getTestCase_byName(iTC_.Name):
-            iTC_.SyncStatus = 4
-            return
+    def pushResult(self, iTC_):
+        try:
+            iResult = dict_getkey(self.STATUS, self.DEFAULT_RESULT)
+            if not self.USE_DEFAULT_RESULT:
+                iResult = dict_getkey(self.STATUS, iTC_.Result)
+                if iResult in ('n', None):
+                    return [{'status':False, 'message': 'skipped'}]
+            return self.CONN.reportTCResult(testplanid = self.TESTPLAN_ID,
+                                            testcaseexternalid = iTC_.FullID,
+                                            buildid = self.TESTBUILD_ID,
+                                            status = iResult,
+                                            user = iTC_.TestedBy,
+                                            notes = iTC_.Note,
+                                            overwrite = True)
+        except Exception, err:
+            return [{'status':False, 'message':err}]
 
-        #Create if new, modify if found external ID
+    def pushTestCase(self, iTC_):
+        #Check if already exists before
+        iDupList = self._getTestCase_byName(iTC_.Name)
+        if iDupList and iTC_.ID <> iDupList[0]['tc_external_id']:
+            print 'A duplicate name found at row %s (with %s-%s: %s). Please use another name'\
+                  % (iTC_.WbIndex, self.PROJECT_PREFIX,
+                     iDupList[0]['tc_external_id'], iDupList[0]['name'])
+            return 0
+
+        #Check if missing owner (in case auto assigned to testplan)
+        if self.AUTO_ADD_TESTPLAN:
+            if iTC_.Owner in ('', None):
+                print 'Missing execution owner at row %s. Please update your workbook' % iTC_.WbIndex
+                return 0
+
+        #Create if new TestCase
         if iTC_.FullID in ('', None):
             try:
                 rs = self.CONN.createTestCase(testcasename = iTC_.Name,
@@ -87,12 +137,17 @@ class Connection(Test):
                                               steps = parse_summary(iTC_.Steps),
                                               importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
                                               executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
-                iTC_.ID = rs[0]['additionalInfo']['external_id']
-                if iTC_.ID is not None:
-                    iTC_.FullID = '%s-%s' % (self.PROJECT_PREFIX, iTC_.ID)
-                    iTC_.SyncStatus = 3
-            except Exception, err: print 'Failed to create TestCase: %s\n%s' % (iTC_.Name, err)
-        else:
+                iTC_.FullID = '%s-%s' % (self.PROJECT_PREFIX, rs[0]['additionalInfo']['external_id'])
+                if self.AUTO_ADD_TESTPLAN:
+                    self._addTestCase_toTestPlan(iTC_)
+                    self._addTestCase_toTestBuild(iTC_)
+                print 'Successfully created TestCase: %s - %s' % (iTC_.FullID, iTC_.Name)
+                return 1
+            except Exception, err:
+                print 'Failed to create TestCase: %s\n%s' % (iTC_.Name, err)
+
+        #Modify existing TestCase
+        if iTC_.FullID not in ('', None):
             try:
                 self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
                                          testcasename = iTC_.Name,
@@ -101,8 +156,27 @@ class Connection(Test):
                                          steps = parse_summary(iTC_.Steps),
                                          importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
                                          executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
-                iTC_.SyncStatus = 4
-            except Exception, err: print 'Failed to modifiy TestCase: %s\n%s' % (iTC_.Name, err)
+                if self.AUTO_ADD_TESTPLAN:
+                    self._addTestCase_toTestPlan(iTC_)
+            except Exception, err:
+                if type(err).__name__ == 'ExpatError': pass
+                else:
+                    print 'Failed to modifiy TestCase: %s\n%s' % (iTC_.Name, err)
+                    return 0
+                
+            #Reassign owner
+            if self.AUTO_ADD_TESTPLAN:
+                try:
+                    self._removeTestCase_fromTestBuild(iTC_)
+                    self._addTestCase_toTestBuild(iTC_)
+                except Exception, err:
+                    if type(err).__name__ == 'ExpatError': pass
+                    else:
+                        print 'Failed to reassign owner for TestCase: %s\n%s' % (iTC_.Name, err)
+                        return 0
+                    
+            print 'Successfully modified TestCase: %s - %s' % (iTC_.FullID, iTC_.Name)
+            return 2
 
     def pullTestCases(self):
         iTemplate = Template()
@@ -113,29 +187,28 @@ class Connection(Test):
         iTC_List = self.CONN.getTestCasesForTestPlan(testplanid = self.TESTPLAN_ID,
                                                      buildid = self.TESTBUILD_ID,
                                                      details = 'simple')
-        if not iTC_List:
-            return False
-
-        iTC_List = iTC_List.values()
-        for iTC in iTC_List:
-            if iTC[0]['full_external_id'] in iFullID: continue
-            iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
-            newTC = TestCase()
-            newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
-            newTC.SyncStatus = 1
-            newTC.ID = iTC[0]['external_id']
-            newTC.FullID = iTC[0]['full_external_id']
-            newTC.Name = iTC_Details[0]['name']
-            newTC.Summary = iTC_Details[0]['summary']
-            newTC.Steps = iTC_Details[0]['steps']
-            newTC.Author = iTC_Details[0]['author_login'].lower()
-            newTC.Version = int(iTC_Details[0]['version'])
-            newTC.Priority = self.IMPORTANCE.get(int(iTC_Details[0]['importance']))
-            newTC.Exectype = self.EXECUTIONTYPE.get(int(iTC_Details[0]['execution_type']))
-            if iTC[0]['exec_status'] != 'n':
-                newTC.Result = self.STATUS.get(iTC[0]['exec_status'])
-                newTC.Duration = iTC[0]['execution_duration']
-            iTakenLoc = iOpenLoc.pop(0)
-            newTC.WbIndex = iTakenLoc
-            self.append_Test(newTC)
-        return True
+        if iTC_List:
+            iTC_List = iTC_List.values()
+            for iTC in iTC_List:
+                if iTC[0]['full_external_id'] in iFullID: continue
+                iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])            
+                newTC = TestCase()
+                newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
+                newTC.ID = iTC[0]['external_id']
+                newTC.FullID = iTC[0]['full_external_id']
+                newTC.Name = iTC_Details[0]['name']
+                newTC.Summary = iTC_Details[0]['summary']
+                newTC.Steps = iTC_Details[0]['steps']
+                newTC.Author = iTC_Details[0]['author_login'].lower()
+                newTC.Owner = self._getTestCase_Owner(newTC)[0]['login'].lower()
+                newTC.Version = int(iTC_Details[0]['version'])
+                newTC.Priority = self.IMPORTANCE.get(int(iTC_Details[0]['importance']))
+                newTC.Exectype = self.EXECUTIONTYPE.get(int(iTC_Details[0]['execution_type']))
+                if iTC[0]['exec_status'] != 'n':
+                    newTC.Result = self.STATUS.get(iTC[0]['exec_status'])
+                    newTC.Duration = iTC[0]['execution_duration']
+                iTakenLoc = iOpenLoc.pop(0)
+                newTC.WbIndex = iTakenLoc
+                self.append_Test(newTC)
+            return [iTC[0]['full_external_id'] for iTC in iTC_List]
+        return []
