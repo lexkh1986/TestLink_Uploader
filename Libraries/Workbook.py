@@ -34,6 +34,9 @@ class Workbook(object):
                 self.INFO.USE_DEFAULT_RESULT = iConfig.USE_DEFAULT_RESULT
                 self.INFO.DEFAULT_RESULT = iConfig.DEFAULT_RESULT_IN_BATCH
                 print 'Workbook loaded (%s)\nSheet: %s\n' % (self.FILEPATH, iConfig.SHEET_NAME)
+                print 'Test Project: %s' % self.INFO.PROJECT_NAME
+                print 'Test Plan: %s' % self.INFO.TESTPLAN_NAME
+                print 'Test Build: %s' % self.INFO.TESTBUILD_NAME
                 return
             raise Exception('Could not locate excel workbook by path: %s' % self.FILEPATH)
         raise Exception('Could not locate settings: %s' % self.CONFIG_PATH)
@@ -87,7 +90,8 @@ class Workbook(object):
             try:
                 wb.save(self.FILEPATH)
             except IOError, err:
-                raise Exception('Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH)
+                print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH
+                sys.exit(1)
         else:
             print 'Testplan details pulled without any TestCases from TestLink'
 
@@ -104,7 +108,9 @@ class Workbook(object):
                         ws.write(iTC.WbIndex, self.HEADER.index('FullID'), iTC.FullID, iStyle)
 
             wb.save(self.FILEPATH)
-        except IOError, err: raise Exception('Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH)
+        except IOError, err:
+            print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % self.FILEPATH
+            sys.exit(1)
 
     def pushResults(self):
         for iTC in self.INFO.TESTS:
@@ -114,3 +120,10 @@ class Workbook(object):
                     print 'Succeeded upload result: %s %s' % (iTC.FullID, iTC.Result)
                 else:
                     print 'Execution result: %s %s - %s' % (iTC.FullID, iTC.Result, rs[0]['message'])
+
+    def connect(self):
+        self.INFO.connectTL()
+
+    def createTestplan(self):
+        self.INFO._createTestPlan()
+        self.INFO._createTestBuild()

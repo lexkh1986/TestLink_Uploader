@@ -2,6 +2,7 @@ from TestModel import *
 from Template import *
 from testlink import *
 from Misc import *
+import sys
 
 class Connection(Test):
     SYNC = {'':False, 'X':True, 'x':True}
@@ -16,8 +17,6 @@ class Connection(Test):
         self.DEVKEY = devkey
         self.CONN = TestLinkHelper(self.SERVER_URL, self.DEVKEY).connect(TestlinkAPIGeneric)
         self._project()
-        self._testplan()
-        self._testbuild()
 
     def _project(self):
         for elem in self.CONN.getProjects():
@@ -28,16 +27,22 @@ class Connection(Test):
         raise Exception('Project name not found: %s' % self.PROJECT_NAME)
 
     def _testplan(self):
-        self.TESTPLAN_ID = self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
+        try:
+            self.TESTPLAN_ID = self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
                                                        testplanname = self.TESTPLAN_NAME)[0]['id']
+            return True
+        except Exception, err:
+            print 'TestPlan name not found: %s' % self.TESTPLAN_NAME
+            sys.exit(1)
 
     def _testbuild(self):
         iBuilds = self.CONN.getBuildsForTestPlan(self.TESTPLAN_ID)
         for i in iBuilds:
             if self.TESTBUILD_NAME == i['name']:
                 self.TESTBUILD_ID = i['id']
-                return
-        raise Exception('Test build not found: %s' % self.TESTBUILD_NAME)
+                return True
+        print 'Test build not found: %s' % self.TESTBUILD_NAME
+        sys.exit(1)
 
     def _getTestCase_byID(self, full_external_id):
         return self.CONN.getTestCase(testcaseexternalid = full_external_id)
@@ -70,6 +75,25 @@ class Connection(Test):
         return self.CONN.getTestCaseAssignedTester(testplanid = self.TESTPLAN_ID,
                                                    buildid = self.TESTBUILD_ID,
                                                    testcaseexternalid = iTC_.FullID)
+
+    def _createTestPlan(self):
+        try:
+            rs = self.CONN.createTestPlan(testprojectname = self.PROJECT_NAME,
+                                          testplanname = self.TESTPLAN_NAME)
+            self.TESTPLAN_ID = rs[0]['id']
+            print 'Created TestPlan: %s' % self.TESTPLAN_NAME
+        except Exception, err:
+            self._testplan()
+            print 'Failed to create TestPlan: %s. Please recheck if already exists' % self.TESTPLAN_NAME
+
+    def _createTestBuild(self):
+        rs = self.CONN.createBuild(testplanid = self.TESTPLAN_ID,
+                                   buildname = self.TESTBUILD_NAME)
+        self.TESTBUILD_ID = rs[0]['id']
+        if rs[0]['status']:
+            print 'Created TestBuild: %s' % self.TESTBUILD_NAME
+        else:
+            print 'Failed to create TestBuild: %s. Please recheck if already exists' % self.TESTBUILD_NAME
 
     def _getPath(self, full_path, delimeter='/'):
         tmpPath = full_path.split(delimeter)
@@ -212,3 +236,7 @@ class Connection(Test):
                 self.append_Test(newTC)
             return [iTC[0]['full_external_id'] for iTC in iTC_List]
         return []
+
+    def connectTL(self):
+        self._testplan()
+        self._testbuild()
