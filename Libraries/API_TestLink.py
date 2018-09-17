@@ -1,7 +1,7 @@
-from TestModel import *
-from Template import *
-from testlink import *
+from API_Excel import *
 from Misc import *
+from TestModel import *
+from testlink import *
 import sys
 
 class Connection(Test):
@@ -138,7 +138,7 @@ class Connection(Test):
                                             testcaseexternalid = iTC_.FullID,
                                             buildid = self.TESTBUILD_ID,
                                             status = iResult,
-                                            user = iTC_.TestedBy,
+                                            user = iTC_.Owner,
                                             notes = iTC_.Note,
                                             overwrite = True)
         except Exception, err:

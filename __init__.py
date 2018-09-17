@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append('Libraries')
-from Workbook import Workbook
+from Process import Workbook
 
 if __name__ == "__main__":
     if set(sys.argv) & set(['-p','--pull']):
