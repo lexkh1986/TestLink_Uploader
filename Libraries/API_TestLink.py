@@ -216,16 +216,22 @@ class Connection(Test):
         iStart = iTemplate.LOC_DETAILS.get('r') + 1
         iConsumedLoc = [elem.toDict()['WbIndex'] for elem in self.TESTS]
         iOpenLoc = [i for i in range(iStart, iTemplate.MAX_ROW_SUPPORT) if i not in iConsumedLoc]
-        iFullID = [iTC.FullID for iTC in self.TESTS]
+        iExistingFullID = [iTC.FullID for iTC in self.TESTS]
         iTC_List = self.CONN.getTestCasesForTestPlan(testplanid = self.TESTPLAN_ID,
                                                      buildid = self.TESTBUILD_ID,
                                                      details = 'simple')
         if iTC_List:
             iTC_List = iTC_List.values()
+            tmpResults = []
             for iTC in iTC_List:
-                if iTC[0]['full_external_id'] in iFullID: continue
                 iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
                 newTC = TestCase()
+                if iTC[0]['full_external_id'] in iExistingFullID:
+                    newTC.WbIndex = self.get_byFullID(iTC[0]['full_external_id']).WbIndex
+                    self.pop_byFullID(iTC[0]['full_external_id'])
+                else:
+                    iTakenLoc = iOpenLoc.pop(0)
+                    newTC.WbIndex = iTakenLoc
                 newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
                 newTC.ID = iTC[0]['external_id']
                 newTC.FullID = iTC[0]['full_external_id']
@@ -241,10 +247,9 @@ class Connection(Test):
                 if iTC[0]['exec_status'] != 'n':
                     newTC.Result = self.STATUS.get(iTC[0]['exec_status'])
                     newTC.Duration = iTC[0]['execution_duration']
-                iTakenLoc = iOpenLoc.pop(0)
-                newTC.WbIndex = iTakenLoc
                 self.append_Test(newTC)
-            return [iTC[0]['full_external_id'] for iTC in iTC_List]
+                tmpResults.append(newTC.FullID)
+            return tmpResults
         return []
 
     def connectTL(self):

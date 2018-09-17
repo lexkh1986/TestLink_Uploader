@@ -11,6 +11,17 @@ class Test(object):
     def toDict(self):
         return [iTC.toDict() for iTC in self.TESTS]
 
+    def get_byFullID(self, fullID):
+        for iTC in self.TESTS:
+            if iTC.FullID == fullID:
+                return iTC
+        return None
+
+    def pop_byFullID(self, fullID):
+        for idx, iTC in enumerate(self.TESTS):
+            if iTC.FullID == fullID:
+                del self.TESTS[idx]
+
 class TestCase(object):
     def __init__(self):
         self.ID = None
