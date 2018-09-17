@@ -80,12 +80,14 @@ class Workbook(object):
             wb = copy(self.WORKBOOK)
             ws = wb.get_sheet(0)
             ws.show_grid = False
-            iStyle = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin;')
+            iCommonStyle = 'borders: left thin, right thin, top thin, bottom thin;\
+                            align: wrap yes,vert centre'
             
             for iTC in self.INFO.TESTS:
                 if iTC.FullID in pulledList:
                     for i, val in enumerate(self.HEADER):
-                        ws.write(iTC.WbIndex, i, parse_summary(iTC.toDict().get(val), True), iStyle)
+                        iStyle = iCommonStyle + ',horiz center; font: bold on' if val in ('Sync', 'Result') else iCommonStyle
+                        ws.write(iTC.WbIndex, i, parse_summary(iTC.toDict().get(val), True), xlwt.easyxf(iStyle))
                     print 'Pulled TestCase: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
             try:
                 wb.save(self.FILEPATH)
@@ -101,11 +103,13 @@ class Workbook(object):
             ws = wb.get_sheet(0)
             ws.show_grid = False
 
-            iStyle = xlwt.easyxf('borders: left thin, right thin, top thin, bottom thin;')
+            iCommonStyle = 'borders: left thin, right thin, top thin, bottom thin;\
+                            align: wrap yes,vert centre'
+            
             for iTC in self.INFO.TESTS:
                 if self.INFO.SYNC.get(iTC.Sync, False):
                     if self.INFO.pushTestCase(iTC) == 1:
-                        ws.write(iTC.WbIndex, self.HEADER.index('FullID'), iTC.FullID, iStyle)
+                        ws.write(iTC.WbIndex, self.HEADER.index('FullID'), iTC.FullID, xlwt.easyxf(iCommonStyle))
 
             wb.save(self.FILEPATH)
         except IOError, err:

@@ -99,7 +99,7 @@ class Connection(Test):
         iParentDetails = self.CONN.getTestSuiteByID(parentSuiteID)
         iFullPath = [(iParentDetails['parent_id'], iParentDetails['name'])]
 
-        while int(iFullPath[0][0]) != 1:
+        while int(iFullPath[0][0]) != int(self.PROJECT_ID):
             tmpUpperDetails = self.CONN.getTestSuiteByID(iFullPath[0][0])
             iFullPath.insert(0, (tmpUpperDetails['parent_id'], tmpUpperDetails['name']))
         return self.DELIMETER.join([node[1] for node in iFullPath])
