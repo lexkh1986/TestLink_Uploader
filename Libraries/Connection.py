@@ -95,8 +95,17 @@ class Connection(Test):
         else:
             print 'Failed to create TestBuild: %s. Please recheck if already exists' % self.TESTBUILD_NAME
 
-    def _getPath(self, full_path, delimeter='/'):
-        tmpPath = full_path.split(delimeter)
+    def _getFullSuitePath(self, parentSuiteID):
+        iParentDetails = self.CONN.getTestSuiteByID(parentSuiteID)
+        iFullPath = [(iParentDetails['parent_id'], iParentDetails['name'])]
+
+        while int(iFullPath[0][0]) != 1:
+            tmpUpperDetails = self.CONN.getTestSuiteByID(iFullPath[0][0])
+            iFullPath.insert(0, (tmpUpperDetails['parent_id'], tmpUpperDetails['name']))
+        return self.DELIMETER.join([node[1] for node in iFullPath])
+
+    def _validateParentSuite(self, iTC_):
+        tmpPath = iTC_.Address.split(self.DELIMETER)
         tmpRefID, tmpRefName = None, None
         tmpRoot = self.CONN.getFirstLevelTestSuitesForTestProject(self.PROJECT_ID)
 
@@ -104,13 +113,13 @@ class Connection(Test):
         for fc in tmpRoot:
             if fc['name'] == tmpPath[0]:
                 tmpRefID, tmpRefName = fc['id'], fc['name']
-        if tmpRefID is None: raise Exception('Could not found "%s" in full path: %s' % (tmpPath[0], full_path))
+        if tmpRefID is None: raise Exception('Could not found "%s" in full path: %s' % (tmpPath[0], iTC_.Address))
 
         # Get child loop
         for idx, node in enumerate(tmpPath):
             if idx == 0: continue
             tmpChilds = self.CONN.getTestSuitesForTestSuite(tmpRefID)
-            if not tmpChilds: raise Exception('Could not found "%s" in full path: %s' % (node, full_path))
+            if not tmpChilds: raise Exception('Could not found "%s" in full path: %s' % (node, iTC_.Address))
             tmpChilds = tmpChilds.values() if tmpChilds.get('name', None) is None else [tmpChilds]
             for n in tmpChilds:
                 if n['name'] == node:
@@ -155,7 +164,7 @@ class Connection(Test):
             try:
                 rs = self.CONN.createTestCase(testcasename = iTC_.Name,
                                               testprojectid = self.PROJECT_ID,
-                                              testsuiteid = self._getPath(iTC_.Address, self.DELIMETER),
+                                              testsuiteid = self._validateParentSuite(iTC_),
                                               authorlogin = iTC_.Author,
                                               summary = parse_summary(iTC_.Summary),
                                               steps = parse_summary(iTC_.Steps),
@@ -215,11 +224,12 @@ class Connection(Test):
             iTC_List = iTC_List.values()
             for iTC in iTC_List:
                 if iTC[0]['full_external_id'] in iFullID: continue
-                iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])            
+                iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
                 newTC = TestCase()
                 newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
                 newTC.ID = iTC[0]['external_id']
                 newTC.FullID = iTC[0]['full_external_id']
+                newTC.Address = self._getFullSuitePath(iTC_Details[0]['testsuite_id'])
                 newTC.Name = iTC_Details[0]['name']
                 newTC.Summary = iTC_Details[0]['summary']
                 newTC.Steps = iTC_Details[0]['steps']

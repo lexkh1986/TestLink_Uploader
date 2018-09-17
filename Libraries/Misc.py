@@ -36,7 +36,7 @@ def parse_summary(string, isReversed=False):
             val[i] = val[i].replace('<strong>&emsp;Step:</strong>', 'Step:')
             val[i] = val[i].replace('<strong>&emsp;Checkpoint:</strong>', 'Checkpoint:')
             val[i] = val[i].replace('<strong>&emsp;Verify point:</strong>', 'Verify point:')
-        return '\n'.join(val)
+        return '\n'.join(val).strip()
 
 def remove_tags(text):
     return TAG_RE.sub('', text)
