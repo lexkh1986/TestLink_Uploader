@@ -28,14 +28,11 @@ def parse_summary(string, isReversed=False):
     else:
         ps = HTMLParser()
         val = string.encode('ascii',errors='ignore').split('<br/>')
-        if '\n' in val: val.remove('\n')
         for i, v in enumerate(val):
             val[i] = re.sub(r'\n\t', '', val[i])
             val[i] = remove_tags(val[i])
             val[i] = ps.unescape(val[i])
-            val[i] = val[i].replace('<strong>&emsp;Step:</strong>', 'Step:')
-            val[i] = val[i].replace('<strong>&emsp;Checkpoint:</strong>', 'Checkpoint:')
-            val[i] = val[i].replace('<strong>&emsp;Verify point:</strong>', 'Verify point:')
+        val = filter(None, val)
         return '\n'.join(val).strip()
 
 def remove_tags(text):
