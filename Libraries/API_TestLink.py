@@ -167,7 +167,7 @@ class Connection(Test):
                                               testsuiteid = self._validateParentSuite(iTC_),
                                               authorlogin = iTC_.Author,
                                               summary = parse_summary(iTC_.Summary),
-                                              steps = parse_summary(iTC_.Steps),
+                                              steps = iTC_.Steps,
                                               importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
                                               executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
                 iTC_.FullID = '%s-%s' % (self.PROJECT_PREFIX, rs[0]['additionalInfo']['external_id'])
@@ -186,7 +186,7 @@ class Connection(Test):
                                          testcasename = iTC_.Name,
                                          user = iTC_.Author,
                                          summary = parse_summary(iTC_.Summary),
-                                         steps = parse_summary(iTC_.Steps),
+                                         steps = iTC_.Steps,
                                          importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
                                          executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
                 if self.AUTO_ADD_TESTPLAN:

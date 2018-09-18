@@ -48,7 +48,7 @@ class Workbook(object):
             newTC.Note = iExcel.cell_byCol(ir, 'Note')
             newTC.ID = newTC.FullID[len(self.INFO.PROJECT_PREFIX)+1-len(newTC.FullID):]
             if 'Steps' in iExcel.HEADER:
-                newTC.Steps = iExcel.cell_byCol(ir, 'Steps')
+                newTC.Steps = parse_steps(iExcel.cell_byCol(ir, 'Steps'))
             self.INFO.append_Test(newTC)
 
     def pullTestCases(self):
@@ -59,7 +59,8 @@ class Workbook(object):
                 if iTC.FullID in pulledList:
                     for val in self.TEMPLATE.HEADER:
                         iStyle = self.TEMPLATE.iCentreStyle if val in ('Sync', 'Result') else self.TEMPLATE.iCommonStyle
-                        self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iTC.toDict().get(val), True), iStyle)
+                        iValue = parse_steps(iTC.Steps, True) if val == 'Steps' else iTC.toDict().get(val)
+                        self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
                     print 'Pulled TestCase: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
             self.TEMPLATE.save_write(self.FILEPATH)
         else:

@@ -44,9 +44,3 @@ class TestCase(object):
 
     def toDict(self):
         return self.__dict__
-
-##test = Test()
-##testcase1 = TestCase('Test1', 'Name1', 'Summary1', 'Medium', 'Manual')
-##testcase2 = TestCase('Test2', 'Name2', 'Summary2', 'High', 'Automated')
-##test.append_Test(testcase1)
-##test.append_Test(testcase2)

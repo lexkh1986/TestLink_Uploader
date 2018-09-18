@@ -14,11 +14,32 @@ def getVarFromFile(filename):
         exec(f.read(), data.__dict__)
     return data
 
+def parse_steps(steps, isReversed=False):
+    if isReversed:
+        if steps not in (None, ''):
+            tmpStr = ['Step%s: %sExpectation: %s' % (s.get('step_number'),
+                                                     s.get('actions'),
+                                                     s.get('expected_results'))\
+                      for s in steps]
+            return '\n'.join(tmpStr)
+    else:
+        tmpStr = steps.encode('ascii',errors='ignore').split('\n\n')
+        tmpSteps = []
+        for s in tmpStr:
+            tmpSt = s.split('\n')
+            tmpNo = tmpSt[0].split(': ')
+            tmpValidated = {}
+            tmpValidated.update({'step_number':int(tmpNo[0].strip('Step')),
+                                 'actions':tmpNo[1],
+                                 'expected_results':tmpSt[1].strip('Expectation: ')})
+            tmpSteps.append(tmpValidated)
+        return tmpSteps
+
 def parse_summary(string, isReversed=False):
     if string is None: string = ''
     if type(string) == list: string = str(string)
     if not isReversed:
-        val = string.split('''\n''')
+        val = string.split('\n')
         for i, v in enumerate(val):
             val[i] = '%s<br/>' % v
             val[i] = val[i].replace('Step:','<strong>&emsp;Step:</strong>')
