@@ -20,7 +20,7 @@ class Connection(Test):
 
     def _project(self):
         for elem in self.CONN.getProjects():
-            if elem['name'] == self.PROJECT_NAME:
+            if elem['name'].replace(' ','') == self.PROJECT_NAME.replace(' ',''):
                 self.PROJECT_ID = elem['id']
                 self.PROJECT_PREFIX = elem['prefix']
                 return
@@ -28,8 +28,9 @@ class Connection(Test):
 
     def _testplan(self):
         try:
-            self.TESTPLAN_ID = self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
-                                                       testplanname = self.TESTPLAN_NAME)[0]['id']
+            self.TESTPLAN_ID.replace(' ','')\
+            = self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
+                                          testplanname = self.TESTPLAN_NAME)[0]['id'].replace(' ','')
             return True
         except Exception, err:
             print 'TestPlan name not found: %s' % self.TESTPLAN_NAME
@@ -38,7 +39,7 @@ class Connection(Test):
     def _testbuild(self):
         iBuilds = self.CONN.getBuildsForTestPlan(self.TESTPLAN_ID)
         for i in iBuilds:
-            if self.TESTBUILD_NAME == i['name']:
+            if self.TESTBUILD_NAME.replace(' ','') == i['name'].replace(' ',''):
                 self.TESTBUILD_ID = i['id']
                 return True
         print 'Test build not found: %s' % self.TESTBUILD_NAME
@@ -212,6 +213,7 @@ class Connection(Test):
             return 2
 
     def pullTestCases(self):
+        print self.__dict__
         iTemplate = Template()
         iStart = iTemplate.LOC_DETAILS.get('r') + 1
         iConsumedLoc = [elem.toDict()['WbIndex'] for elem in self.TESTS]
