@@ -20,7 +20,7 @@ class Connection(Test):
 
     def _project(self):
         for elem in self.CONN.getProjects():
-            if elem['name'] == self.PROJECT_NAME:
+            if elem['name'].replace(' ','') == self.PROJECT_NAME.replace(' ',''):
                 self.PROJECT_ID = elem['id']
                 self.PROJECT_PREFIX = elem['prefix']
                 return
@@ -28,9 +28,11 @@ class Connection(Test):
 
     def _testplan(self):
         try:
-            self.TESTPLAN_ID = self.CONN.getTestPlanByName(testprojectname = self.PROJECT_NAME,
-                                                       testplanname = self.TESTPLAN_NAME)[0]['id']
-            return True
+            tmpFound = [(i['name'], i['id']) for i in self.CONN.getProjectTestPlans(self.PROJECT_ID)]
+            for tmpTP in tmpFound:
+                if self.TESTPLAN_NAME.replace(' ','') == tmpTP[0].replace(' ',''):
+                    self.TESTPLAN_ID = tmpTP[1]
+                    return True
         except Exception, err:
             print 'TestPlan name not found: %s' % self.TESTPLAN_NAME
             sys.exit(1)
@@ -38,7 +40,7 @@ class Connection(Test):
     def _testbuild(self):
         iBuilds = self.CONN.getBuildsForTestPlan(self.TESTPLAN_ID)
         for i in iBuilds:
-            if self.TESTBUILD_NAME == i['name']:
+            if self.TESTBUILD_NAME.replace(' ','') == i['name'].replace(' ',''):
                 self.TESTBUILD_ID = i['id']
                 return True
         print 'Test build not found: %s' % self.TESTBUILD_NAME
