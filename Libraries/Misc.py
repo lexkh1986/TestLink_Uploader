@@ -1,4 +1,5 @@
 import re
+import os, sys
 from HTMLParser import HTMLParser
 
 TAG_RE = re.compile(r'<[^>]+>')
@@ -61,3 +62,12 @@ def parse_summary(string, isReversed=False):
 
 def remove_tags(text):
     return TAG_RE.sub('', text)
+
+def isReadonly(filepath):
+    if os.path.exists(filepath):
+        try:
+            os.rename(filepath, filepath)
+        except OSError as e:
+            print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath
+            sys.exit(1)
+            

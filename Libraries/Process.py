@@ -52,6 +52,7 @@ class Workbook(object):
             self.INFO.append_Test(newTC)
 
     def pullTestCases(self):
+        isReadonly(self.FILEPATH)
         pulledList = self.INFO.pullTestCases()
         if pulledList:
             self.TEMPLATE.prepare_write()
@@ -67,6 +68,7 @@ class Workbook(object):
             print 'Testplan details pulled without any TestCases from TestLink'
 
     def pushTestCases(self):
+        isReadonly(self.FILEPATH)
         self.TEMPLATE.prepare_write()
         for iTC in self.INFO.TESTS:
             if self.INFO.SYNC.get(iTC.Sync, False):
