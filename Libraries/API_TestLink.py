@@ -5,7 +5,7 @@ from testlink import *
 import sys
 
 class Connection(Test):
-    SYNC = {'':False, 'X':True, 'x':True}
+    SYNC = {'':0, 'p':1, 'e':2}
     STATUS = {'p':'Pass', 'f':'Fail', 'n':'Not run', 'b':'Block'}
     STATE = {2:'Ready', 4:'Rework', 3:'Final', 1:'Draft'}
     IMPORTANCE = {3:'High', 2:'Medium', 1:'Low'}
@@ -20,7 +20,7 @@ class Connection(Test):
 
     def _project(self):
         for elem in self.CONN.getProjects():
-            if elem['name'].replace(' ','') == self.PROJECT_NAME.replace(' ','').encode('ascii','ignore'):
+            if rem_empty(elem['name']) == rem_empty(self.PROJECT_NAME):
                 self.PROJECT_ID = elem['id']
                 self.PROJECT_PREFIX = elem['prefix']
                 return
@@ -28,7 +28,7 @@ class Connection(Test):
 
     def _testplan(self):
         try:
-            tmpName = self.TESTPLAN_NAME.replace(' ','').encode('ascii','ignore')
+            tmpName = rem_empty(self.TESTPLAN_NAME)
             tmpFound = [(i['name'], i['id']) for i in self.CONN.getProjectTestPlans(self.PROJECT_ID)]
             for tmpTP in tmpFound:
                 if tmpName == tmpTP[0].replace(' ',''):
@@ -41,7 +41,7 @@ class Connection(Test):
     def _testbuild(self):
         iBuilds = self.CONN.getBuildsForTestPlan(self.TESTPLAN_ID)
         for i in iBuilds:
-            if self.TESTBUILD_NAME.replace(' ','').encode('ascii','ignore') == i['name'].replace(' ',''):
+            if rem_empty(self.TESTBUILD_NAME) == rem_empty(i['name']):
                 self.TESTBUILD_ID = i['id']
                 return True
         print 'Test build not found: %s' % self.TESTBUILD_NAME
@@ -216,6 +216,7 @@ class Connection(Test):
 
     def pullTestCases(self):
         iTemplate = Template()
+        iNewTCs = []
         iStart = iTemplate.LOC_DETAILS.get('r') + 1
         iConsumedLoc = [elem.toDict()['WbIndex'] for elem in self.TESTS]
         iOpenLoc = [i for i in range(iStart, iTemplate.MAX_ROW_SUPPORT) if i not in iConsumedLoc]
@@ -225,17 +226,10 @@ class Connection(Test):
                                                      details = 'simple')
         if iTC_List:
             iTC_List = iTC_List.values()
-            tmpResults = []
             for iTC in iTC_List:
                 iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
                 newTC = TestCase()
-                if iTC[0]['full_external_id'] in iExistingFullID:
-                    newTC.WbIndex = self.get_byFullID(iTC[0]['full_external_id']).WbIndex
-                    self.pop_byFullID(iTC[0]['full_external_id'])
-                else:
-                    iTakenLoc = iOpenLoc.pop(0)
-                    newTC.WbIndex = iTakenLoc
-                newTC.Sync = dict_getkey(self.SYNC, newTC.Sync)
+                newTC.Sync = 0
                 newTC.ID = iTC[0]['external_id']
                 newTC.FullID = iTC[0]['full_external_id']
                 newTC.Address = self._getFullSuitePath(iTC_Details[0]['testsuite_id'])
@@ -250,10 +244,32 @@ class Connection(Test):
                 if iTC[0]['exec_status'] != 'n':
                     newTC.Result = self.STATUS.get(iTC[0]['exec_status'])
                     newTC.Duration = iTC[0]['execution_duration']
-                self.append_Test(newTC)
-                tmpResults.append(newTC.FullID)
-            return tmpResults
-        return []
+
+                #Handle conflict
+                if newTC.FullID not in iExistingFullID:
+                    iTakenLoc = iOpenLoc.pop(0)
+                    newTC.WbIndex = iTakenLoc
+                    self.append_Test(newTC)
+                    iNewTCs.append(newTC.FullID)
+                else:
+                    currTCs = self.get_byFullID(iTC[0]['full_external_id'])
+                    if currTCs.Sync not in (1, 2):
+                        newTC.WbIndex = currTCs.WbIndex
+                        self.pop_byFullID(currTCs.FullID)
+                        self.append_Test(newTC)
+                    else:
+                        tmpCmp = [currTCs.FullID == newTC.FullID,
+                                  currTCs.ID == newTC.ID,
+                                  currTCs.Address == newTC.Address,
+                                  currTCs.Name == newTC.Name,
+                                  rem_empty(currTCs.Summary) == rem_empty(parse_summary(newTC.Summary, True)),
+                                  currTCs.Author == newTC.Author,
+                                  currTCs.Owner == newTC.Owner,
+                                  currTCs.Priority == newTC.Priority,
+                                  currTCs.Exectype == newTC.Exectype]
+                        if False in tmpCmp:
+                            currTCs.fmtCode = 'iConflict'              
+        return iNewTCs
 
     def connectTL(self):
         self._testplan()

@@ -4,8 +4,8 @@ from HTMLParser import HTMLParser
 
 TAG_RE = re.compile(r'<[^>]+>')
 
-def dict_getkey(dict_, value):
-    return next((key for key, val in dict_.items() if val == value), None)
+def dict_getkey(dict_, value, default=None):
+    return next((key for key, val in dict_.items() if val == value), default)
 
 def getVarFromFile(filename):
     import imp
@@ -71,3 +71,5 @@ def isReadonly(filepath):
             print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath
             sys.exit(1)
             
+def rem_empty(string):
+    return string.replace('\n','').replace('\t','').replace(' ','').encode('ascii','ignore')

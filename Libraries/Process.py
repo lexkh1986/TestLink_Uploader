@@ -26,15 +26,12 @@ class Workbook(object):
             return
         raise Exception('Could not locate settings: %s' % self.CONFIG_PATH)
 
-    def loadTestCases(self, useSyncFlag=True):
+    def loadTestCases(self):
         iExcel = self.TEMPLATE
         for ir in iExcel.INDEX_LIST:
-            iSyncFlag = iExcel.cell_byCol(ir, 'Sync')
-            if useSyncFlag:
-                if not self.INFO.SYNC.get(iSyncFlag.upper(), False): continue
             newTC = TestCase()
-            newTC.Sync = iSyncFlag
             newTC.WbIndex = ir
+            newTC.Sync = self.INFO.SYNC.get(iExcel.cell_byCol(ir, 'Sync').lower())
             newTC.FullID = iExcel.cell_byCol(ir, 'FullID')
             newTC.Name = iExcel.cell_byCol(ir, 'Name')
             newTC.Summary = iExcel.cell_byCol(ir, 'Summary')
@@ -53,25 +50,37 @@ class Workbook(object):
 
     def pullTestCases(self):
         isReadonly(self.FILEPATH)
-        pulledList = self.INFO.pullTestCases()
-        if pulledList:
-            self.TEMPLATE.prepare_write()
-            for iTC in self.INFO.TESTS:
-                if iTC.FullID in pulledList:
-                    for val in self.TEMPLATE.HEADER:
-                        iStyle = self.TEMPLATE.iCentreStyle if val in ('Sync', 'Result') else self.TEMPLATE.iCommonStyle
-                        iValue = parse_steps(iTC.Steps, True) if val == 'Steps' else iTC.toDict().get(val)
-                        self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
-                    print 'Pulled TestCase: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
-            self.TEMPLATE.save_write(self.FILEPATH)
-        else:
-            print 'Testplan details pulled without any TestCases from TestLink'
+        newPulled = self.INFO.pullTestCases()
+        self.TEMPLATE.prepare_write()
+        for iTC in self.INFO.TESTS:
+            #Write pulled item to row
+            for val in self.TEMPLATE.HEADER:
+                iStyle = self.TEMPLATE.iCommonStyle
+                iValue = parse_steps(iTC.Steps, True) if val == 'Steps' else iTC.toDict().get(val)
+                if val == 'Sync':
+                    iStyle = self.TEMPLATE.iCentreStyle
+                    iValue = dict_getkey(self.INFO.SYNC, iValue)
+                if iTC.fmtCode == 'iConflict':
+                    iStyle = iStyle + ';pattern: pattern solid, fore_colour yellow'
+                self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
+
+            if iTC.FullID in newPulled:
+                print 'Pulled new: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                continue
+            elif iTC.Sync in (1, 2) and iTC.fmtCode == 'iConflict':
+                print 'Conflict: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                continue
+            elif iTC.Sync not in (1, 2):
+                print 'Overwrited: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                continue
+            
+        self.TEMPLATE.save_write(self.FILEPATH)
 
     def pushTestCases(self):
         isReadonly(self.FILEPATH)
         self.TEMPLATE.prepare_write()
         for iTC in self.INFO.TESTS:
-            if self.INFO.SYNC.get(iTC.Sync, False):
+            if iTC.Sync == 1:
                 if self.INFO.pushTestCase(iTC) == 1:
                     self.TEMPLATE.write(iTC.WbIndex, 'FullID', iTC.FullID, self.TEMPLATE.iCommonStyle)
         self.TEMPLATE.save_write(self.FILEPATH)

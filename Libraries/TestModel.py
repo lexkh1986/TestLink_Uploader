@@ -35,8 +35,9 @@ class TestCase(object):
         self.Exectype = None
         self.Owner = None
         self.Version = 1
-        self.Sync = False
+        self.Sync = 0
         self.WbIndex = None
+        self.fmtCode = None
 
         self.Result = None
         self.Duration = None

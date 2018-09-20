@@ -13,7 +13,7 @@ class Template(object):
     MAX_ROW_SUPPORT = 5000
 
     iCommonStyle = 'borders: left thin, right thin, top thin, bottom thin; align: wrap yes,vert centre'
-    iCentreStyle = 'borders: left thin, right thin, top thin, bottom thin; align: wrap yes,vert centre,horiz center; font: bold on'
+    iCentreStyle = iCommonStyle + ',horiz center; font: bold on'
 
     def __init__(self):
         self.isLoaded = False
