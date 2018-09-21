@@ -12,11 +12,31 @@ class Template(object):
     LOC_DETAILS = {'c':0, 'r':5}
     MAX_ROW_SUPPORT = 5000
 
-    iCommonStyle = 'borders: left thin, right thin, top thin, bottom thin; align: wrap yes,vert centre'
-    iCentreStyle = iCommonStyle + ',horiz center; font: bold on'
-
     def __init__(self):
         self.isLoaded = False
+
+    def initStyle(self):
+        tmpFont = xlwt.Font()
+        tmpFont.bold = False
+
+        tmpBorder = xlwt.Borders()
+        tmpBorder.left = 1
+        tmpBorder.right = 1
+        tmpBorder.top = 1
+        tmpBorder.bottom = 1
+
+        tmpAlignment = xlwt.Alignment()
+        tmpAlignment.vert = xlwt.Alignment.VERT_CENTER
+        tmpAlignment.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+
+        tmpPattern = xlwt.Pattern()
+
+        iStyle = xlwt.XFStyle()
+        iStyle.font = tmpFont
+        iStyle.borders = tmpBorder
+        iStyle.alignment = tmpAlignment
+        iStyle.pattern = tmpPattern
+        return iStyle
 
     def load(self, filepath, sheetname):
         self.openWorkbook(filepath)
@@ -85,5 +105,4 @@ class Template(object):
             sys.exit(1)
 
     def write(self, row, col_name, value, style):
-        self.tmpSHEET.write(row, self.HEADER.index(col_name), value, xlwt.easyxf(style))
-        
+        self.tmpSHEET.write(row, self.HEADER.index(col_name), value, style)

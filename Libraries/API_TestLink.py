@@ -258,17 +258,16 @@ class Connection(Test):
                         self.pop_byFullID(currTCs.FullID)
                         self.append_Test(newTC)
                     else:
-                        tmpCmp = [currTCs.FullID == newTC.FullID,
-                                  currTCs.ID == newTC.ID,
-                                  currTCs.Address == newTC.Address,
-                                  currTCs.Name == newTC.Name,
-                                  rem_empty(currTCs.Summary) == rem_empty(parse_summary(newTC.Summary, True)),
-                                  currTCs.Author == newTC.Author,
-                                  currTCs.Owner == newTC.Owner,
-                                  currTCs.Priority == newTC.Priority,
-                                  currTCs.Exectype == newTC.Exectype]
-                        if False in tmpCmp:
-                            currTCs.fmtCode = 'iConflict'              
+                        tmpCmp = {'FullID':currTCs.FullID == newTC.FullID,
+                                  'Address':currTCs.Address == newTC.Address,
+                                  'Name':currTCs.Name == newTC.Name,
+                                  'Summary':rem_empty(currTCs.Summary) == rem_empty(parse_summary(newTC.Summary, True)),
+                                  'Author':currTCs.Author == newTC.Author,
+                                  'Owner':currTCs.Owner == newTC.Owner,
+                                  'Priority':currTCs.Priority == newTC.Priority,
+                                  'Exectype':currTCs.Exectype == newTC.Exectype}
+                        if False in tmpCmp.values():
+                            currTCs.fmtCode = tmpCmp
         return iNewTCs
 
     def connectTL(self):

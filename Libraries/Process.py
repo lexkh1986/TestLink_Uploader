@@ -2,6 +2,7 @@ from API_Excel import *
 from API_TestLink import *
 from TestModel import *
 from Misc import *
+from copy import copy
 import os, sys
 
 class Workbook(object):
@@ -55,19 +56,23 @@ class Workbook(object):
         for iTC in self.INFO.TESTS:
             #Write pulled item to row
             for val in self.TEMPLATE.HEADER:
-                iStyle = self.TEMPLATE.iCommonStyle
+                iStyle = self.TEMPLATE.initStyle()
                 iValue = parse_steps(iTC.Steps, True) if val == 'Steps' else iTC.toDict().get(val)
                 if val == 'Sync':
-                    iStyle = self.TEMPLATE.iCentreStyle
+                    iStyle.alignment.horz = xlwt.Alignment.HORZ_CENTER
+                    iStyle.font.bold = True
                     iValue = dict_getkey(self.INFO.SYNC, iValue)
-                if iTC.fmtCode == 'iConflict':
-                    iStyle = iStyle + ';pattern: pattern solid, fore_colour yellow'
+                if iTC.fmtCode is not None:
+                    iStyle.pattern.pattern = xlwt.Pattern.SOLID_PATTERN
+                    iStyle.pattern.pattern_fore_colour = xlwt.Style.colour_map['yellow']
+                    if not iTC.fmtCode.get(val) and val in (iTC.fmtCode.keys()):
+                        iStyle.font.colour_index = xlwt.Style.colour_map['red']
                 self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
 
             if iTC.FullID in newPulled:
                 print 'Pulled new: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
                 continue
-            elif iTC.Sync in (1, 2) and iTC.fmtCode == 'iConflict':
+            elif iTC.Sync in (1, 2) and iTC.fmtCode is not None:
                 print 'Conflict: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
                 continue
             elif iTC.Sync not in (1, 2):
