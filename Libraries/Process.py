@@ -87,7 +87,7 @@ class Workbook(object):
         for iTC in self.INFO.TESTS:
             if iTC.Sync == 1:
                 if self.INFO.pushTestCase(iTC) == 1:
-                    self.TEMPLATE.write(iTC.WbIndex, 'FullID', iTC.FullID, self.TEMPLATE.iCommonStyle)
+                    self.TEMPLATE.write(iTC.WbIndex, 'FullID', iTC.FullID, self.TEMPLATE.initStyle())
         self.TEMPLATE.save_write(self.FILEPATH)
 
     def pushResults(self):
