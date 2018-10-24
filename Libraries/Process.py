@@ -75,13 +75,13 @@ class Workbook(object):
                     self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
 
             if iTC.FullID in newPulled:
-                print 'Pulled new: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                print 'Pulled new: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
                 continue
             elif iTC.Sync in (1, 2) and iTC.fmtCode is not None:
-                print 'Conflict: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                print 'Conflict: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
                 continue
             elif iTC.Sync not in (1, 2):
-                print 'Overwrited: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
+                print 'Overwrited: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
                 continue
             
         self.TEMPLATE.save_write(self.FILEPATH)
@@ -100,9 +100,9 @@ class Workbook(object):
             if iTC.FullID not in ('', None):
                 rs = self.INFO.pushResult(iTC)
                 if rs[0]['status']:
-                    print 'Succeeded upload result: %s %s' % (iTC.FullID, iTC.Result)
+                    print 'Succeeded upload result: (Row %s) %s %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result)
                 else:
-                    print 'Execution result: %s %s - %s' % (iTC.FullID, iTC.Result, rs[0]['message'])
+                    print 'Execution result: (Row %s) %s %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result, rs[0]['message'])
 
     def connect(self):
         self.INFO.connectTL()

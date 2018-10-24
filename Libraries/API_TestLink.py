@@ -158,7 +158,7 @@ class Connection(Test):
             for elem in iDupList:
                 if elem['parent_id'] == self._validateParentSuite(iTC_) and iTC_.ID <> elem['tc_external_id']:
                     print 'A duplicate name found at row %s (with %s-%s: %s) in same folder. Please use another name'\
-                          % (iTC_.WbIndex, self.PROJECT_PREFIX,
+                          % (str(iTC_.WbIndex+1), self.PROJECT_PREFIX,
                              elem['tc_external_id'], elem['name'])
                     return 0
 
@@ -183,10 +183,10 @@ class Connection(Test):
                 if self.AUTO_ADD_TESTPLAN:
                     self._addTestCase_toTestPlan(iTC_)
                     self._addTestCase_toTestBuild(iTC_)
-                print 'Successfully created TestCase: %s - %s' % (iTC_.FullID, iTC_.Name)
+                print 'Successfully created TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name)
                 return 1
             except Exception, err:
-                print 'Failed to create TestCase: %s\n%s' % (iTC_.Name, err)
+                print 'Failed to create TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
 
         #Modify existing TestCase
         if iTC_.FullID not in ('', None):
@@ -210,7 +210,7 @@ class Connection(Test):
             except Exception, err:
                 if type(err).__name__ == 'ExpatError': pass
                 else:
-                    print 'Failed to modifiy TestCase: %s\n%s' % (iTC_.Name, err)
+                    print 'Failed to modifiy TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
                     return 0
                 
             #Reassign owner
@@ -221,10 +221,10 @@ class Connection(Test):
                 except Exception, err:
                     if type(err).__name__ == 'ExpatError': pass
                     else:
-                        print 'Failed to reassign owner for TestCase: %s\n%s' % (iTC_.Name, err)
+                        print 'Failed to reassign owner for TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
                         return 0
                     
-            print 'Successfully modified TestCase: %s - %s' % (iTC_.FullID, iTC_.Name)
+            print 'Successfully modified TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name)
             return 2
 
     def pullTestCases(self):
