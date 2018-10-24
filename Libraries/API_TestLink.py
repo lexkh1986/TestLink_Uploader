@@ -2,7 +2,7 @@ from API_Excel import *
 from Misc import *
 from TestModel import *
 from testlink import *
-import sys
+import sys, traceback
 
 class Connection(Test):
     SYNC = {'':0, 'p':1, 'e':2}
@@ -51,8 +51,10 @@ class Connection(Test):
         return self.CONN.getTestCase(testcaseexternalid = full_external_id)
 
     def _getTestCase_byName(self, name):
-        try: return self.CONN.getTestCaseIDByName(testcasename = name,
+        try:
+            tmpTC = self.CONN.getTestCaseIDByName(testcasename = name,
                                                   testprojectname = self.PROJECT_NAME)
+            return tmpTC
         except: return []
 
     def _addTestCase_toTestPlan(self, iTC_):
@@ -98,14 +100,16 @@ class Connection(Test):
         else:
             print 'Failed to create TestBuild: %s. Please recheck if already exists' % self.TESTBUILD_NAME
 
-    def _getFullSuitePath(self, parentSuiteID):
-        iParentDetails = self.CONN.getTestSuiteByID(parentSuiteID)
-        iFullPath = [(iParentDetails['parent_id'], iParentDetails['name'])]
-
-        while int(iFullPath[0][0]) != int(self.PROJECT_ID):
-            tmpUpperDetails = self.CONN.getTestSuiteByID(iFullPath[0][0])
-            iFullPath.insert(0, (tmpUpperDetails['parent_id'], tmpUpperDetails['name']))
-        return self.DELIMETER.join([node[1] for node in iFullPath])
+    def _getFullSuitePath(self, full_external_id):
+        tmpPath = None
+        if full_external_id is not None:
+            ID = self._getTestCase_byID(full_external_id)[0]['testcase_id']
+            try:
+                tmpPath = self.CONN.getFullPath(int(ID)).values()
+                return self.DELIMETER.join(tmpPath[0])
+            except Exception, err:
+                traceback.print_exc()
+        return tmpPath
 
     def _validateParentSuite(self, iTC_):
         tmpPath = iTC_.Address.split(self.DELIMETER)
@@ -127,7 +131,7 @@ class Connection(Test):
             for n in tmpChilds:
                 if n['name'] == node:
                     tmpRefID, tmpRefName = n['id'], n['name']
-                    isFound = True
+                    break
         return tmpRefID
 
     def pushResult(self, iTC_):
@@ -150,11 +154,13 @@ class Connection(Test):
     def pushTestCase(self, iTC_):
         #Check if already exists before
         iDupList = self._getTestCase_byName(iTC_.Name)
-        if iDupList and iTC_.ID <> iDupList[0]['tc_external_id']:
-            print 'A duplicate name found at row %s (with %s-%s: %s). Please use another name'\
-                  % (iTC_.WbIndex, self.PROJECT_PREFIX,
-                     iDupList[0]['tc_external_id'], iDupList[0]['name'])
-            return 0
+        if iDupList:
+            for elem in iDupList:
+                if self._getFullSuitePath(iTC_.FullID) == iTC_.Address and iTC_.ID <> elem['tc_external_id']:
+                    print 'A duplicate name found at row %s (with %s-%s: %s) in same folder. Please use another name'\
+                          % (iTC_.WbIndex, self.PROJECT_PREFIX,
+                             elem['tc_external_id'], elem['name'])
+                    return 0
 
         #Check if missing owner (in case auto assigned to testplan)
         if self.AUTO_ADD_TESTPLAN:
@@ -185,13 +191,20 @@ class Connection(Test):
         #Modify existing TestCase
         if iTC_.FullID not in ('', None):
             try:
-                self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
-                                         testcasename = iTC_.Name,
-                                         user = iTC_.Author,
-                                         summary = parse_summary(iTC_.Summary),
-                                         steps = iTC_.Steps,
-                                         importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
-                                         executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
+                if self.IGNORE_PUSH_STEPS:
+                    self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
+                                             testcasename = iTC_.Name,
+                                             user = iTC_.Author,
+                                             importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
+                                             executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
+                else:
+                    self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
+                                             testcasename = iTC_.Name,
+                                             user = iTC_.Author,
+                                             summary = parse_summary(iTC_.Summary),
+                                             steps = iTC_.Steps,
+                                             importance = dict_getkey(self.IMPORTANCE, iTC_.Priority),
+                                             executiontype = dict_getkey(self.EXECUTIONTYPE, iTC_.Exectype))
                 if self.AUTO_ADD_TESTPLAN:
                     self._addTestCase_toTestPlan(iTC_)
             except Exception, err:
@@ -232,8 +245,8 @@ class Connection(Test):
                 newTC.Sync = 0
                 newTC.ID = iTC[0]['external_id']
                 newTC.FullID = iTC[0]['full_external_id']
-                newTC.Address = self._getFullSuitePath(iTC_Details[0]['testsuite_id'])
                 newTC.Name = iTC_Details[0]['name']
+                newTC.Address = self._getFullSuitePath(newTC.FullID)
                 newTC.Summary = iTC_Details[0]['summary']
                 newTC.Steps = iTC_Details[0]['steps']
                 newTC.Author = iTC_Details[0]['author_login'].lower()

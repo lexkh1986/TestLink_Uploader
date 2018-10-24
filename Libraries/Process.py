@@ -24,6 +24,8 @@ class Workbook(object):
             self.INFO.AUTO_ADD_TESTPLAN = iConfig.AUTO_ADD_TESTPLAN
             self.INFO.USE_DEFAULT_RESULT = iConfig.USE_DEFAULT_RESULT
             self.INFO.DEFAULT_RESULT = iConfig.DEFAULT_RESULT_IN_BATCH
+            self.INFO.IGNORE_PUSH_STEPS = iConfig.IGNORE_PUSH_STEPS
+            self.INFO.IGNORE_PULL_STEPS = iConfig.IGNORE_PULL_STEPS
             return
         raise Exception('Could not locate settings: %s' % self.CONFIG_PATH)
 
@@ -34,7 +36,7 @@ class Workbook(object):
             newTC.WbIndex = ir
             newTC.Sync = self.INFO.SYNC.get(iExcel.cell_byCol(ir, 'Sync').lower())
             newTC.FullID = iExcel.cell_byCol(ir, 'FullID')
-            newTC.Name = iExcel.cell_byCol(ir, 'Name')
+            newTC.Name = iExcel.cell_byCol(ir, 'Name').encode('ascii','ignore')
             newTC.Summary = iExcel.cell_byCol(ir, 'Summary')
             newTC.Address = iExcel.cell_byCol(ir, 'Address')
             newTC.Author = iExcel.cell_byCol(ir, 'Author').lower()
@@ -67,7 +69,10 @@ class Workbook(object):
                     iStyle.pattern.pattern_fore_colour = xlwt.Style.colour_map['yellow']
                     if not iTC.fmtCode.get(val) and val in (iTC.fmtCode.keys()):
                         iStyle.font.colour_index = xlwt.Style.colour_map['red']
-                self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
+                if self.INFO.IGNORE_PULL_STEPS and val in ('Summary', 'Steps'):
+                    self.TEMPLATE.write(iTC.WbIndex, val, '', iStyle)
+                else:
+                    self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
 
             if iTC.FullID in newPulled:
                 print 'Pulled new: %s - %s' % (iTC.FullID, parse_summary(iTC.Name, True))
