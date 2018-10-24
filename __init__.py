@@ -23,7 +23,7 @@ if __name__ == "__main__":
         wb = Workbook()
         wb.loadWorkbook()
         wb.connect()
-        wb.loadTestCases(False)
+        wb.loadTestCases()
         print '\nDo commands:'
         wb.pushResults()
 
