@@ -191,7 +191,7 @@ class Connection(Test):
         #Modify existing TestCase
         if iTC_.FullID not in ('', None):
             try:
-                if self.IGNORE_PUSH_STEPS:
+                if self.IGNORE_STEPS:
                     self.CONN.updateTestCase(testcaseexternalid = iTC_.FullID,
                                              testcasename = iTC_.Name,
                                              user = iTC_.Author,

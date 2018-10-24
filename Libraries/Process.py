@@ -24,8 +24,7 @@ class Workbook(object):
             self.INFO.AUTO_ADD_TESTPLAN = iConfig.AUTO_ADD_TESTPLAN
             self.INFO.USE_DEFAULT_RESULT = iConfig.USE_DEFAULT_RESULT
             self.INFO.DEFAULT_RESULT = iConfig.DEFAULT_RESULT_IN_BATCH
-            self.INFO.IGNORE_PUSH_STEPS = iConfig.IGNORE_PUSH_STEPS
-            self.INFO.IGNORE_PULL_STEPS = iConfig.IGNORE_PULL_STEPS
+            self.INFO.IGNORE_STEPS = iConfig.IGNORE_STEPS
             return
         raise Exception('Could not locate settings: %s' % self.CONFIG_PATH)
 
@@ -69,7 +68,7 @@ class Workbook(object):
                     iStyle.pattern.pattern_fore_colour = xlwt.Style.colour_map['yellow']
                     if not iTC.fmtCode.get(val) and val in (iTC.fmtCode.keys()):
                         iStyle.font.colour_index = xlwt.Style.colour_map['red']
-                if self.INFO.IGNORE_PULL_STEPS and val in ('Summary', 'Steps'):
+                if self.INFO.IGNORE_STEPS and val in ('Summary', 'Steps'):
                     self.TEMPLATE.write(iTC.WbIndex, val, '', iStyle)
                 else:
                     self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
