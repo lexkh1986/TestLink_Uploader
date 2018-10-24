@@ -106,7 +106,7 @@ class Connection(Test):
             ID = self._getTestCase_byID(full_external_id)[0]['testcase_id']
             try:
                 tmpPath = self.CONN.getFullPath(int(ID)).values()
-                return self.DELIMETER.join(tmpPath[0])
+                return self.DELIMETER.join(tmpPath[0][1:])
             except Exception, err:
                 traceback.print_exc()
         return tmpPath
@@ -156,7 +156,7 @@ class Connection(Test):
         iDupList = self._getTestCase_byName(iTC_.Name)
         if iDupList:
             for elem in iDupList:
-                if self._getFullSuitePath(iTC_.FullID) == iTC_.Address and iTC_.ID <> elem['tc_external_id']:
+                if elem['parent_id'] == self._validateParentSuite(iTC_) and iTC_.ID <> elem['tc_external_id']:
                     print 'A duplicate name found at row %s (with %s-%s: %s) in same folder. Please use another name'\
                           % (iTC_.WbIndex, self.PROJECT_PREFIX,
                              elem['tc_external_id'], elem['name'])
@@ -165,7 +165,7 @@ class Connection(Test):
         #Check if missing owner (in case auto assigned to testplan)
         if self.AUTO_ADD_TESTPLAN:
             if iTC_.Owner in ('', None):
-                print 'Missing execution owner at row %s. Please update your workbook' % iTC_.WbIndex
+                print 'Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name)
                 return 0
 
         #Create if new TestCase
