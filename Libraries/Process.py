@@ -98,10 +98,13 @@ class Workbook(object):
         for iTC in self.INFO.TESTS:
             if iTC.FullID not in ('', None):
                 rs = self.INFO.pushResult(iTC)
-                if rs[0]['status']:
-                    print 'Succeeded upload result: (Row %s) %s %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result)
+                if not self.INFO.USE_DEFAULT_RESULT:
+                    if rs[0]['status']:
+                        print 'Succeeded upload result: (Row %s) %s %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result)
+                    else:
+                        print 'Execution result: (Row %s) %s %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result, rs[0]['message'])
                 else:
-                    print 'Execution result: (Row %s) %s %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result, rs[0]['message'])
+                    print 'Uploaded test result: (Row %s) %s using default value: %s' % (str(iTC.WbIndex+1), iTC.FullID, self.INFO.DEFAULT_RESULT)
 
     def connect(self):
         self.INFO.connectTL()
