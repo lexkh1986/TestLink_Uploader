@@ -1,4 +1,5 @@
 from xlutils.copy import copy
+from Misc import *
 import xlwt, xlrd
 import os, sys
 
@@ -47,20 +48,20 @@ class Template(object):
     def get_ProjectName(self):
         iVal = self.cell(self.LOC_PROJECT_VAL.get('r'),
                          self.LOC_PROJECT_VAL.get('c'))
-        print 'Test Project: %s' % iVal
-        return iVal
+        print 'Test Project: %s' % remove_endash(iVal)
+        return remove_endash(iVal)
 
     def get_TestPlanName(self):
         iVal = self.cell(self.LOC_PLAN_VAL.get('r'),
                          self.LOC_PLAN_VAL.get('c'))
-        print 'Test Plan: %s' % iVal
-        return iVal
+        print 'Test Plan: %s' % remove_endash(iVal)
+        return remove_endash(iVal)
 
     def get_TestBuildName(self):
         iVal = self.cell(self.LOC_BUILD_VAL.get('r'),
                          self.LOC_BUILD_VAL.get('c'))
-        print 'Test Build: %s' % iVal
-        return iVal
+        print 'Test Build: %s' % remove_endash(iVal)
+        return remove_endash(iVal)
 
     def openWorkbook(self, filepath):
         if not os.path.isfile(filepath):

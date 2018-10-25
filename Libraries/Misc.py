@@ -58,7 +58,7 @@ def parse_summary(string, isReversed=False):
             val[i] = remove_tags(val[i])
             val[i] = ps.unescape(val[i])
         val = filter(None, val)
-        return '\n'.join(val).strip()
+        return '\n'.join(val).strip()[:32767] #Cut off limit len from each cell
 
 def remove_tags(text):
     return TAG_RE.sub('', text)
@@ -72,4 +72,8 @@ def isReadonly(filepath):
             sys.exit(1)
             
 def rem_empty(string):
-    return string.replace('\n','').replace('\t','').replace(' ','').encode('ascii','ignore')
+    return remove_endash(string).replace('\n','').replace('\t','').replace(' ','').encode('ascii','ignore')
+
+def remove_endash(string):
+    rs = string.encode('utf-8')
+    return re.sub('\xe2\x80\x93', '-', rs)

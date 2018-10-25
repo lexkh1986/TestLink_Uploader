@@ -8,6 +8,7 @@ if __name__ == "__main__":
         wb.loadWorkbook()
         wb.connect()
         wb.loadTestCases()
+        print '\nImportant Note: Each cell in excel file can only support not more than 32767 chars. Any chars more than 32767 in step/summary will be cut off.'
         print '\nDo commands:'
         wb.pullTestCases()
 
