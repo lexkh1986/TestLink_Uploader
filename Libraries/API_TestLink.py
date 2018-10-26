@@ -240,7 +240,10 @@ class Connection(Test):
         if iTC_List:
             iTC_List = iTC_List.values()
             for iTC in iTC_List:
-                if iTC[0]['exec_on_build'] <> self.TESTBUILD_ID: continue # Only get which testcase belong to selected build
+                iTC_Asignee = self.CONN.getTestCaseAssignedTester(testcaseexternalid = iTC[0]['full_external_id'],
+                                                                  testplanid = self.TESTPLAN_ID,
+                                                                  buildid = self.TESTBUILD_ID)
+                if iTC_Asignee[0]['login'] in ('', None): continue # Only get which testcase belong to selected build
                 iTC_Details = self._getTestCase_byID(iTC[0]['full_external_id'])
                 newTC = TestCase()
                 newTC.Sync = 0

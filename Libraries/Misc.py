@@ -72,7 +72,7 @@ def isReadonly(filepath):
             sys.exit(1)
             
 def rem_empty(string):
-    return remove_endash(string).replace('\n','').replace('\t','').replace(' ','').encode('ascii','ignore')
+    return string.replace('\n','').replace('\t','').replace(' ','').encode('ascii','ignore')
 
 def remove_endash(string):
     rs = string.encode('utf-8')
