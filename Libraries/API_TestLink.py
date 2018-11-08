@@ -13,7 +13,7 @@ class Connection(Test):
 
     def __init__(self, devkey, project, plan, build):
         super(Connection, self).__init__(project, plan, build)
-        self.SERVER_URL = 'http://testlink.nexcel.vn/lib/api/xmlrpc/v1/xmlrpc.php'
+        self.SERVER_URL = 'http://testlink.nexdev.net/lib/api/xmlrpc/v1/xmlrpc.php'
         self.DEVKEY = devkey
         self.CONN = TestLinkHelper(self.SERVER_URL, self.DEVKEY).connect(TestlinkAPIGeneric)
         self._project()
