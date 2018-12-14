@@ -33,3 +33,11 @@ if __name__ == "__main__":
         wb.loadWorkbook()
         print '\nDo commands:'
         wb.createTestplan()
+
+    if set(sys.argv) & set(['-at','--addToTestPlan']):
+        wb = Workbook()
+        wb.loadWorkbook()
+        wb.connect()
+        wb.loadTestCases()
+        print '\nDo commands:'
+        wb.addToTestPlan()

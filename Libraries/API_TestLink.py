@@ -5,7 +5,7 @@ from testlink import *
 import sys, traceback
 
 class Connection(Test):
-    SYNC = {'':0, 'p':1, 'e':2}
+    SYNC = {'':0, 'p':1, 'e':2, 'a':3}
     STATUS = {'p':'Pass', 'f':'Fail', 'n':'Not run', 'b':'Block'}
     STATE = {2:'Ready', 4:'Rework', 3:'Final', 1:'Draft'}
     IMPORTANCE = {3:'High', 2:'Medium', 1:'Low'}
@@ -133,6 +133,17 @@ class Connection(Test):
                     tmpRefID, tmpRefName = n['id'], n['name']
                     break
         return tmpRefID
+
+    def addToTestPlan(self, iTC_):
+        try:
+            self._addTestCase_toTestPlan(iTC_)
+            self._addTestCase_toTestBuild(iTC_)
+        except Exception, err:
+            if type(err).__name__ == 'ExpatError':
+                print 'Already exists in testplan: (Row %s) %s' % (str(iTC_.WbIndex+1), iTC_.FullID)
+            else:
+                print 'Failed to add TestCase to testplan: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.FullID, err)
+            return 0
 
     def pushResult(self, iTC_):
         try:

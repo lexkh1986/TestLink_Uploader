@@ -85,6 +85,12 @@ class Workbook(object):
             
         self.TEMPLATE.save_write(self.FILEPATH)
 
+    def addToTestPlan(self):
+        isReadonly(self.FILEPATH)
+        for iTC in self.INFO.TESTS:
+            if iTC.Sync == 3:
+                self.INFO.addToTestPlan(iTC)
+
     def pushTestCases(self):
         isReadonly(self.FILEPATH)
         self.TEMPLATE.prepare_write()
