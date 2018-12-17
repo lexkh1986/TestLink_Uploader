@@ -136,14 +136,19 @@ class Connection(Test):
 
     def addToTestPlan(self, iTC_):
         try:
-            self._addTestCase_toTestPlan(iTC_)
-            self._addTestCase_toTestBuild(iTC_)
+            self._addTestCase_toTestPlan(iTC_)           
         except Exception, err:
             if type(err).__name__ == 'ExpatError':
                 print 'Already exists in testplan: (Row %s) %s' % (str(iTC_.WbIndex+1), iTC_.FullID)
             else:
                 print 'Failed to add TestCase to testplan: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.FullID, err)
+                return 0
+        #Check if missing owner
+        if iTC_.Owner in ('', None):
+            print 'Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name)
             return 0
+        self._addTestCase_toTestBuild(iTC_)
+        print 'Assigned new owner %s to TestCase at row %s (%s)' % (iTC_.Owner, str(iTC_.WbIndex+1), iTC_.Name)
 
     def pushResult(self, iTC_):
         try:
