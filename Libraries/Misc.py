@@ -26,7 +26,7 @@ def parse_steps(steps, isReversed=False):
         return steps
     else:
         if steps not in (None, ''):
-            tmpStr = steps.encode('ascii',errors='ignore').split('\n\n')
+            tmpStr = [s.strip('\n') for s in steps.encode('ascii',errors='ignore').split('\n\n') if s not in ('\n','\t','',' ')]
             tmpSteps = []
             for s in tmpStr:
                 tmpSt = s.split('\n')
