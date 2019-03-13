@@ -1,5 +1,6 @@
 import re
 import os, sys
+from numbers import Number
 from HTMLParser import HTMLParser
 
 TAG_RE = re.compile(r'<[^>]+>')
@@ -50,7 +51,7 @@ def parse_summary(string, isReversed=False):
             val[i] = val[i].replace('Checkpoint:','<strong>&emsp;Checkpoint:</strong>')
             val[i] = val[i].replace('Verify point:','<strong>&emsp;Verify point:</strong>')
         return ''.join(val)
-    else:
+    elif not isinstance(string, Number):
         ps = HTMLParser()
         val = string.encode('ascii',errors='ignore').split('<br/>')
         for i, v in enumerate(val):
@@ -59,6 +60,8 @@ def parse_summary(string, isReversed=False):
             val[i] = ps.unescape(val[i])
         val = filter(None, val)
         return '\n'.join(val).strip()[:32767] #Cut off limit len from each cell
+    else:
+        return string
 
 def remove_tags(text):
     return TAG_RE.sub('', text)

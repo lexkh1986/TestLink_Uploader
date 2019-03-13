@@ -2,6 +2,7 @@ from API_Excel import *
 from Misc import *
 from TestModel import *
 from testlink import *
+from numbers import Number
 import sys, traceback
 
 class Connection(Test):
@@ -112,26 +113,29 @@ class Connection(Test):
         return tmpPath
 
     def _validateParentSuite(self, iTC_):
-        tmpPath = iTC_.Address.split(self.DELIMETER)
         tmpRefID, tmpRefName = None, None
-        tmpRoot = self.CONN.getFirstLevelTestSuitesForTestProject(self.PROJECT_ID)
+        if not isinstance(iTC_.Address, Number):
+            tmpPath = iTC_.Address.split(self.DELIMETER)
+            tmpRoot = self.CONN.getFirstLevelTestSuitesForTestProject(self.PROJECT_ID)
 
-        # Get first child
-        for fc in tmpRoot:
-            if fc['name'] == tmpPath[0]:
-                tmpRefID, tmpRefName = fc['id'], fc['name']
-        if tmpRefID is None: raise Exception('Could not found "%s" in full path: %s' % (tmpPath[0], iTC_.Address))
+            # Get first child
+            for fc in tmpRoot:
+                if fc['name'] == tmpPath[0]:
+                    tmpRefID, tmpRefName = fc['id'], fc['name']
+            if tmpRefID is None: raise Exception('Could not found "%s" in full path: %s' % (tmpPath[0], iTC_.Address))
 
-        # Get child loop
-        for idx, node in enumerate(tmpPath):
-            if idx == 0: continue
-            tmpChilds = self.CONN.getTestSuitesForTestSuite(tmpRefID)
-            if not tmpChilds: raise Exception('Could not found "%s" in full path: %s' % (node, iTC_.Address))
-            tmpChilds = tmpChilds.values() if tmpChilds.get('name', None) is None else [tmpChilds]
-            for n in tmpChilds:
-                if n['name'] == node:
-                    tmpRefID, tmpRefName = n['id'], n['name']
-                    break
+            # Get child loop
+            for idx, node in enumerate(tmpPath):
+                if idx == 0: continue
+                tmpChilds = self.CONN.getTestSuitesForTestSuite(tmpRefID)
+                if not tmpChilds: raise Exception('Could not found "%s" in full path: %s' % (node, iTC_.Address))
+                tmpChilds = tmpChilds.values() if tmpChilds.get('name', None) is None else [tmpChilds]
+                for n in tmpChilds:
+                    if n['name'] == node:
+                        tmpRefID, tmpRefName = n['id'], n['name']
+                        break
+        else:
+            tmpRefID = int(iTC_.Address)
         return tmpRefID
 
     def addToTestPlan(self, iTC_):
