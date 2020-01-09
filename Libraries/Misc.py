@@ -71,7 +71,7 @@ def isReadonly(filepath):
         try:
             os.rename(filepath, filepath)
         except OSError as e:
-            print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath
+            print('Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath)
             sys.exit(1)
             
 def rem_empty(string):

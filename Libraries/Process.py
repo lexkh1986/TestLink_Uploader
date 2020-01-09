@@ -74,13 +74,13 @@ class Workbook(object):
                     self.TEMPLATE.write(iTC.WbIndex, val, parse_summary(iValue, True), iStyle)
 
             if iTC.FullID in newPulled:
-                print 'Pulled new: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
+                print('Pulled new: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True)))
                 continue
             elif iTC.Sync in (1, 2) and iTC.fmtCode is not None:
-                print 'Conflict: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
+                print('Conflict: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True)))
                 continue
             elif iTC.Sync not in (1, 2):
-                print 'Overwrited: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True))
+                print('Overwrited: (Row %s) %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, parse_summary(iTC.Name, True)))
                 continue
             
         self.TEMPLATE.save_write(self.FILEPATH)
@@ -106,11 +106,11 @@ class Workbook(object):
                 rs = self.INFO.pushResult(iTC)
                 if not self.INFO.USE_DEFAULT_RESULT:
                     if rs[0]['status']:
-                        print 'Succeeded upload result: (Row %s) %s %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result)
+                        print('Succeeded upload result: (Row %s) %s %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result))
                     else:
-                        print 'Execution result: (Row %s) %s %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result, rs[0]['message'])
+                        print('Execution result: (Row %s) %s %s - %s' % (str(iTC.WbIndex+1), iTC.FullID, iTC.Result, rs[0]['message']))
                 else:
-                    print 'Uploaded test result: (Row %s) %s using default value: %s' % (str(iTC.WbIndex+1), iTC.FullID, self.INFO.DEFAULT_RESULT)
+                    print('Uploaded test result: (Row %s) %s using default value: %s' % (str(iTC.WbIndex+1), iTC.FullID, self.INFO.DEFAULT_RESULT))
 
     def connect(self):
         self.INFO.connectTL()

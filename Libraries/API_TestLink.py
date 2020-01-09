@@ -36,7 +36,7 @@ class Connection(Test):
                     self.TESTPLAN_ID = tmpTP[1]
                     return True
         except Exception, err:
-            print 'TestPlan name not found: %s' % self.TESTPLAN_NAME
+            print('TestPlan name not found: %s' % self.TESTPLAN_NAME)
             sys.exit(1)
 
     def _testbuild(self):
@@ -45,7 +45,7 @@ class Connection(Test):
             if rem_empty(self.TESTBUILD_NAME) == rem_empty(i['name']):
                 self.TESTBUILD_ID = i['id']
                 return True
-        print 'Test build not found: %s' % self.TESTBUILD_NAME
+        print('Test build not found: %s' % self.TESTBUILD_NAME)
         sys.exit(1)
 
     def _getTestCase_byID(self, full_external_id):
@@ -87,19 +87,19 @@ class Connection(Test):
             rs = self.CONN.createTestPlan(testprojectname = self.PROJECT_NAME,
                                           testplanname = self.TESTPLAN_NAME)
             self.TESTPLAN_ID = rs[0]['id']
-            print 'Created TestPlan: %s' % self.TESTPLAN_NAME
+            print('Created TestPlan: %s' % self.TESTPLAN_NAME)
         except Exception, err:
             self._testplan()
-            print 'Failed to create TestPlan: %s. Please recheck if already exists' % self.TESTPLAN_NAME
+            print('Failed to create TestPlan: %s. Please recheck if already exists' % self.TESTPLAN_NAME)
 
     def _createTestBuild(self):
         rs = self.CONN.createBuild(testplanid = self.TESTPLAN_ID,
                                    buildname = self.TESTBUILD_NAME)
         self.TESTBUILD_ID = rs[0]['id']
         if rs[0]['status']:
-            print 'Created TestBuild: %s' % self.TESTBUILD_NAME
+            print('Created TestBuild: %s' % self.TESTBUILD_NAME)
         else:
-            print 'Failed to create TestBuild: %s. Please recheck if already exists' % self.TESTBUILD_NAME
+            print('Failed to create TestBuild: %s. Please recheck if already exists' % self.TESTBUILD_NAME)
 
     def _getFullSuitePath(self, full_external_id):
         tmpPath = None
@@ -143,16 +143,16 @@ class Connection(Test):
             self._addTestCase_toTestPlan(iTC_)           
         except Exception, err:
             if type(err).__name__ == 'ExpatError':
-                print 'Already exists in testplan: (Row %s) %s' % (str(iTC_.WbIndex+1), iTC_.FullID)
+                print('Already exists in testplan: (Row %s) %s' % (str(iTC_.WbIndex+1), iTC_.FullID))
             else:
-                print 'Failed to add TestCase to testplan: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.FullID, err)
+                print('Failed to add TestCase to testplan: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.FullID, err))
                 return 0
         #Check if missing owner
         if iTC_.Owner in ('', None):
-            print 'Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name)
+            print('Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name))
             return 0
         self._addTestCase_toTestBuild(iTC_)
-        print 'Assigned new owner %s to TestCase at row %s (%s)' % (iTC_.Owner, str(iTC_.WbIndex+1), iTC_.Name)
+        print('Assigned new owner %s to TestCase at row %s (%s)' % (iTC_.Owner, str(iTC_.WbIndex+1), iTC_.Name))
 
     def pushResult(self, iTC_):
         try:
@@ -177,15 +177,15 @@ class Connection(Test):
         if iDupList:
             for elem in iDupList:
                 if elem['parent_id'] == self._validateParentSuite(iTC_) and iTC_.ID <> elem['tc_external_id']:
-                    print 'A duplicate name found at row %s (with %s-%s: %s) in same folder. Please use another name'\
+                    print('A duplicate name found at row %s (with %s-%s: %s) in same folder. Please use another name'\
                           % (str(iTC_.WbIndex+1), self.PROJECT_PREFIX,
-                             elem['tc_external_id'], elem['name'])
+                             elem['tc_external_id'], elem['name']))
                     return 0
 
         #Check if missing owner (in case auto assigned to testplan)
         if self.AUTO_ADD_TESTPLAN:
             if iTC_.Owner in ('', None):
-                print 'Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name)
+                print('Missing execution owner at row %s (%s). Please update your workbook' % (str(iTC_.WbIndex+1), iTC_.Name))
                 return 0
 
         #Create if new TestCase
@@ -203,10 +203,10 @@ class Connection(Test):
                 if self.AUTO_ADD_TESTPLAN:
                     self._addTestCase_toTestPlan(iTC_)
                     self._addTestCase_toTestBuild(iTC_)
-                print 'Successfully created TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name)
+                print('Successfully created TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name))
                 return 1
             except Exception, err:
-                print 'Failed to create TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
+                print('Failed to create TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err))
 
         #Modify existing TestCase
         if iTC_.FullID not in ('', None):
@@ -230,7 +230,7 @@ class Connection(Test):
             except Exception, err:
                 if type(err).__name__ == 'ExpatError': pass
                 else:
-                    print 'Failed to modifiy TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
+                    print('Failed to modifiy TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err))
                     return 0
                 
             #Reassign owner
@@ -241,10 +241,10 @@ class Connection(Test):
                 except Exception, err:
                     if type(err).__name__ == 'ExpatError': pass
                     else:
-                        print 'Failed to reassign owner for TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err)
+                        print('Failed to reassign owner for TestCase: (Row %s) %s\n%s' % (str(iTC_.WbIndex+1), iTC_.Name, err))
                         return 0
                     
-            print 'Successfully modified TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name)
+            print('Successfully modified TestCase: (Row %s) %s - %s' % (str(iTC_.WbIndex+1), iTC_.FullID, iTC_.Name))
             return 2
 
     def pullTestCases(self):

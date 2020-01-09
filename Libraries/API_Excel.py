@@ -43,24 +43,24 @@ class Template(object):
         self.openWorkbook(filepath)
         self.openSheet(sheetname)
         self.processData()
-        print 'Workbook loaded (%s)\nSheet: %s\n' % (filepath, sheetname)
+        print('Workbook loaded (%s)\nSheet: %s\n' % (filepath, sheetname))
 
     def get_ProjectName(self):
         iVal = self.cell(self.LOC_PROJECT_VAL.get('r'),
                          self.LOC_PROJECT_VAL.get('c'))
-        print 'Test Project: %s' % remove_endash(iVal)
+        print('Test Project: %s' % remove_endash(iVal))
         return remove_endash(iVal)
 
     def get_TestPlanName(self):
         iVal = self.cell(self.LOC_PLAN_VAL.get('r'),
                          self.LOC_PLAN_VAL.get('c'))
-        print 'Test Plan: %s' % remove_endash(iVal)
+        print('Test Plan: %s' % remove_endash(iVal))
         return remove_endash(iVal)
 
     def get_TestBuildName(self):
         iVal = self.cell(self.LOC_BUILD_VAL.get('r'),
                          self.LOC_BUILD_VAL.get('c'))
-        print 'Test Build: %s' % remove_endash(iVal)
+        print('Test Build: %s' % remove_endash(iVal))
         return remove_endash(iVal)
 
     def openWorkbook(self, filepath):
@@ -102,7 +102,7 @@ class Template(object):
         try:
             self.tmpWORKBOOK.save(filepath)
         except IOError, err:
-            print 'Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath
+            print('Permission denied: %s\nPlease close your workbook and re-run task again.' % filepath)
             sys.exit(1)
 
     def write(self, row, col_name, value, style):
